@@ -1,657 +1,1725 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="siteTitle">Qurilmalarni Boshqarish Tizimi</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.85);
-            --accent: #3b82f6;
-            --text: #f8fafc;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --purple: #8b5cf6;
-            --teal: #14b8a6;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Qurilmalarni Boshqarish Tizimi</title>
+<style>
+    :root {
+        --bg: #0b1220;
+        --card: rgba(30, 41, 59, 0.72);
+        --line: rgba(255,255,255,0.09);
+        --accent: #3b82f6;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --danger: #ef4444;
+        --success: #22c55e;
+        --warning: #f59e0b;
+        --purple: #8b5cf6;
+        --teal: #14b8a6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background:
+            radial-gradient(900px 500px at 10% -10%, rgba(59,130,246,0.18), transparent 60%),
+            radial-gradient(800px 500px at 110% 10%, rgba(139,92,246,0.16), transparent 60%),
+            var(--bg);
+        color: var(--text);
+        padding: 16px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        overflow-x: hidden;
+        transition: padding-top .3s ease;
+    }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text); padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .box { max-width: 750px; width: 100%; background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        h2 { color: var(--accent); font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; }
-        .badge { background: rgba(59,130,246,0.2); border: 1px solid var(--accent); padding: 10px; border-radius: 6px; text-align: center; font-weight: bold; margin-bottom: 10px; }
-        
-        button { padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; color: white; transition: 0.05s; }
-        button:active { transform: scale(0.96); }
+    /* ===== YUQORI E'LON PANELI ===== */
+    .announcement-bar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 44px;
+        background: #dc2626;
+        color: #fff;
+        display: none;
+        align-items: center;
+        z-index: 90000;
+        box-shadow: 0 4px 20px rgba(0,0,0,.5);
+        font-weight: 800;
+        font-size: .92rem;
+        overflow: hidden;
+        transition: background .3s ease, height .2s ease, font-size .2s ease;
+    }
+    .announcement-bar.show { display: flex; }
+    .announcement-bar::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+        background-size: 200% 100%;
+        animation: annShine 4s linear infinite;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .announcement-bar[data-size="small"] { height: 36px; font-size: .8rem; }
+    .announcement-bar[data-size="large"] { height: 54px; font-size: 1.15rem; }
 
-        .btn-green { background: var(--success); }
-        .btn-red { background: var(--danger); }
-        .btn-yellow { background: var(--warning); }
-        .btn-purple { background: var(--purple); }
-        .btn-teal { background: var(--teal); }
-        .btn-blue { background: var(--accent); width: 100%; }
+    @keyframes annShine {
+        0%   { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+    }
 
-        textarea, input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px; margin-bottom: 10px; }
-        textarea { height: 60px; resize: none; }
-        
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
-        .card { background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
-        .video-box { width: 100%; height: 260px; background: #000; border-radius: 6px; overflow: hidden; margin-top: 8px; display: none; position: relative; }
-        .video-box img, .video-box video { width: 100%; height: 100%; object-fit: contain; }
-        
-        .media-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
-        .media-item { background: rgba(255,255,255,0.05); padding: 4px; border-radius: 4px; text-align: center; }
-        .media-item img, .media-item video { width: 100%; height: 75px; object-fit: cover; border-radius: 4px; }
-        .media-actions { display: flex; gap: 4px; margin-top: 4px; }
-        .media-actions a, .media-actions button { flex: 1; font-size: 0.65rem; padding: 4px; text-align: center; text-decoration: none; border: none; border-radius: 3px; cursor: pointer; color: white; }
+    .ann-track {
+        flex: 1;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+        z-index: 2;
+    }
+    .ann-mover {
+        display: inline-block;
+        white-space: nowrap;
+        padding-left: 100%;
+        animation: annScroll var(--ann-dur, 18s) linear infinite;
+        will-change: transform;
+        line-height: 1;
+    }
+    .ann-mover .ann-text {
+        display: inline-block;
+        text-shadow: 0 1px 4px rgba(0,0,0,.55);
+        letter-spacing: .4px;
+    }
+    @keyframes annScroll {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-100%); }
+    }
 
-        /* ID ekranida Admin ekranini ko'rsatish oynasi */
-        #adminBroadcastOverlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(15, 23, 42, 0.98);
-            z-index: 99999;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-        }
-        #broadcastVideo {
-            width: 100%;
-            max-height: 85vh;
-            background: #000;
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            object-fit: contain;
-        }
+    /* ===== UMUMIY ===== */
+    .box {
+        max-width: 760px;
+        width: 100%;
+        background: var(--card);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        box-shadow: 0 12px 34px rgba(0,0,0,0.35);
+        animation: rise .35s ease both;
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-        /* Taymerli ekran xabari */
-        #screenMessageOverlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(15, 23, 42, 0.95);
-            z-index: 9999;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-            text-align: center;
-        }
-        #screenMessageText {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 20px;
-            word-break: break-all;
-        }
-        #messageTimerCount { font-size: 1.2rem; color: #f59e0b; }
-    </style>
+    h2 {
+        font-size: 1.02rem;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(90deg, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        letter-spacing: .3px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .badge {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: rgba(59,130,246,0.12);
+        border: 1px solid rgba(59,130,246,0.4);
+        padding: 11px 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        font-size: .92rem;
+    }
+    .badge #myId { color: #93c5fd; letter-spacing: .6px; }
+    .copy-btn {
+        background: rgba(59,130,246,0.22);
+        border: 1px solid rgba(59,130,246,0.45);
+        color: #bfdbfe;
+        border-radius: 7px;
+        padding: 5px 10px;
+        font-size: .72rem;
+        font-weight: 700;
+        cursor: pointer;
+        width: auto !important;
+    }
+    button {
+        padding: 11px 10px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: .84rem;
+        color: #fff;
+        transition: transform .08s ease, filter .15s ease;
+        font-family: inherit;
+        letter-spacing: .2px;
+    }
+    button:hover { filter: brightness(1.12); }
+    button:active { transform: scale(.96); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-green  { background: linear-gradient(145deg, #22c55e, #16a34a); }
+    .btn-red    { background: linear-gradient(145deg, #ef4444, #dc2626); }
+    .btn-yellow { background: linear-gradient(145deg, #f59e0b, #d97706); }
+    .btn-purple { background: linear-gradient(145deg, #8b5cf6, #7c3aed); }
+    .btn-teal   { background: linear-gradient(145deg, #14b8a6, #0d9488); }
+    .btn-blue   { background: linear-gradient(145deg, #3b82f6, #2563eb); width: 100%; }
+
+    textarea, input, select {
+        width: 100%;
+        padding: 11px 12px;
+        background: rgba(11,18,32,0.85);
+        border: 1px solid #334155;
+        color: #fff;
+        border-radius: 9px;
+        margin-bottom: 10px;
+        font-size: .88rem;
+        font-family: inherit;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    textarea:focus, input:focus, select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
+    }
+    textarea { height: 62px; resize: vertical; }
+    .grid   { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+
+    .card {
+        background: rgba(11,18,32,0.7);
+        border: 1px solid #334155;
+        padding: 13px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        animation: rise .3s ease both;
+    }
+    .video-box {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #000;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 8px;
+        display: none;
+        border: 1px solid rgba(59,130,246,0.35);
+    }
+    .video-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+    .media-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .media-item {
+        background: rgba(255,255,255,0.05);
+        padding: 5px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+    .media-item img, .media-item video {
+        width: 100%; height: 74px; object-fit: cover; border-radius: 5px; display: block;
+    }
+    .media-actions { display: flex; gap: 4px; margin-top: 5px; }
+    .media-actions a, .media-actions button {
+        flex: 1; font-size: .64rem; padding: 5px 3px; text-align: center;
+        text-decoration: none; border: none; border-radius: 5px; cursor: pointer;
+        color: #fff; font-weight: 700;
+    }
+    .status-line { font-size: .78rem; color: var(--muted); text-align: center; margin-top: 8px; line-height: 1.5; }
+    .status-line.ok { color: #4ade80; }
+
+    /* ===== ADMIN EKRAN ===== */
+    #adminBroadcastOverlay {
+        position: fixed; inset: 0;
+        background: #000;
+        z-index: 99999;
+        display: none;
+        flex-direction: column;
+        animation: fadeIn .25s ease both;
+    }
+    #adminBroadcastOverlay.show { display: flex; }
+    .bc-top {
+        display: flex; align-items: center; gap: 9px;
+        padding: 10px 14px;
+        background: linear-gradient(90deg, rgba(239,68,68,.22), rgba(15,23,42,.9));
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        font-size: .8rem; font-weight: 700; color: #fecaca;
+        letter-spacing: .4px;
+        flex-shrink: 0;
+    }
+    .live-dot {
+        width: 9px; height: 9px; border-radius: 50%;
+        background: #ef4444; flex-shrink: 0;
+        box-shadow: 0 0 0 0 rgba(239,68,68,.7);
+        animation: pulseDot 1.4s infinite;
+    }
+    @keyframes pulseDot {
+        0%   { box-shadow: 0 0 0 0 rgba(239,68,68,.7); }
+        70%  { box-shadow: 0 0 0 11px rgba(239,68,68,0); }
+        100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+    .bc-spacer { flex: 1; }
+    .bc-fs {
+        background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+        color: #fff; padding: 6px 11px; border-radius: 8px; font-size: .74rem;
+        width: auto !important; font-weight: 700;
+    }
+    .bc-stage {
+        flex: 1; display: flex; align-items: center; justify-content: center;
+        overflow: hidden; background: #000; cursor: zoom-in;
+    }
+    .bc-stage img {
+        max-width: 100%; max-height: 100%;
+        width: auto; height: auto;
+        object-fit: contain; display: block; background: #000;
+    }
+    .bc-hint {
+        position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+        background: rgba(0,0,0,.6);
+        color: #cbd5e1; font-size: .72rem;
+        padding: 7px 15px; border-radius: 999px;
+        pointer-events: none;
+        border: 1px solid rgba(255,255,255,.1);
+        transition: opacity .5s ease;
+    }
+    .bc-hint.hide { opacity: 0; }
+
+    /* ===== EKRAN XABARI ===== */
+    #screenMessageOverlay {
+        position: fixed; inset: 0;
+        background: rgba(8, 13, 25, 0.96);
+        backdrop-filter: blur(8px);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        text-align: center;
+    }
+    #screenMessageOverlay.show { display: flex; animation: fadeIn .3s ease both; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    #screenMessageText {
+        font-size: clamp(1.4rem, 6vw, 2.4rem);
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 22px;
+        word-break: break-word;
+        line-height: 1.35;
+        text-shadow: 0 4px 24px rgba(59,130,246,.5);
+    }
+    #messageTimerCount {
+        font-size: 1.05rem;
+        color: var(--warning);
+        font-weight: 700;
+        border: 1px solid rgba(245,158,11,.45);
+        background: rgba(245,158,11,.1);
+        padding: 9px 20px;
+        border-radius: 999px;
+    }
+
+    /* ===== TOAST ===== */
+    #toastWrap {
+        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+        z-index: 100000;
+        display: flex; flex-direction: column; gap: 8px;
+        width: calc(100% - 32px); max-width: 400px;
+        pointer-events: none;
+    }
+    .toast {
+        background: rgba(30,41,59,.97);
+        border: 1px solid var(--accent);
+        border-left: 4px solid var(--accent);
+        color: #e2e8f0;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: .84rem;
+        font-weight: 600;
+        box-shadow: 0 10px 28px rgba(0,0,0,.5);
+        opacity: 0; transform: translateY(-14px);
+        transition: opacity .28s ease, transform .28s ease;
+        pointer-events: auto;
+    }
+    .toast.show { opacity: 1; transform: none; }
+    .toast.error   { border-color: var(--danger);  border-left-color: var(--danger); }
+    .toast.success { border-color: var(--success); border-left-color: var(--success); }
+    .toast.warn    { border-color: var(--warning); border-left-color: var(--warning); }
+
+    .conn {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: .72rem; color: var(--muted); font-weight: 600;
+    }
+    .conn i {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #64748b; display: block; transition: background .3s ease;
+    }
+    .conn.ok i { background: var(--success); box-shadow: 0 0 8px rgba(34,197,94,.8); }
+    .conn.ok { color: #86efac; }
+
+    .section-title {
+        font-size: .8rem; font-weight: 800; letter-spacing: .5px;
+        text-transform: uppercase; color: var(--muted);
+        margin-bottom: 8px; display: flex; align-items: center; gap: 7px;
+    }
+    .panel {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        padding: 13px;
+        border-radius: 12px;
+        margin-bottom: 11px;
+    }
+
+    /* ===== E'LON QATORLARI ===== */
+    .ann-row {
+        display: flex; align-items: center; gap: 6px;
+        margin-bottom: 6px;
+    }
+    .ann-row .ann-num {
+        flex-shrink: 0;
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        background: rgba(59,130,246,.2);
+        border: 1px solid rgba(59,130,246,.55);
+        display: flex; align-items: center; justify-content: center;
+        font-size: .7rem; font-weight: 800; color: #93c5fd;
+    }
+    .ann-row .ann-input {
+        flex: 1;
+        margin-bottom: 0 !important;
+        padding: 8px 11px;
+    }
+    .ann-row .ann-del {
+        flex-shrink: 0;
+        width: 32px; height: 32px;
+        padding: 0;
+        background: rgba(239,68,68,.15);
+        border: 1px solid rgba(239,68,68,.4);
+        color: #fca5a5;
+        border-radius: 8px;
+        font-size: 1.15rem;
+        line-height: 1;
+    }
+    .ann-row .ann-del:hover { background: rgba(239,68,68,.3); }
+
+    /* ===== RANG TANLASH ===== */
+    .color-row {
+        display: flex; gap: 6px; align-items: center; margin-bottom: 8px;
+    }
+    .color-row input[type="color"] {
+        width: 50px; height: 42px;
+        padding: 3px;
+        margin: 0;
+        border-radius: 9px;
+        cursor: pointer;
+        flex-shrink: 0;
+        background: rgba(11,18,32,0.85);
+    }
+    .color-row input[type="text"] {
+        flex: 1; margin: 0;
+        font-family: 'Consolas', monospace;
+        letter-spacing: .5px;
+    }
+    .palette {
+        display: flex; flex-wrap: wrap; gap: 7px;
+        margin: 4px 0 10px;
+    }
+    .swatch {
+        width: 32px; height: 32px;
+        padding: 0;
+        border-radius: 8px;
+        border: 2px solid rgba(255,255,255,.18);
+        cursor: pointer;
+        transition: transform .12s ease, border-color .15s ease, box-shadow .15s ease;
+        flex-shrink: 0;
+    }
+    .swatch:hover { transform: scale(1.12); border-color: rgba(255,255,255,.6); }
+    .swatch.active {
+        border-color: #fff;
+        box-shadow: 0 0 0 3px rgba(255,255,255,.28);
+        transform: scale(1.08);
+    }
+
+    .ann-preview {
+        border-radius: 9px;
+        padding: 10px 14px;
+        font-size: .88rem;
+        font-weight: 800;
+        text-align: center;
+        color: #fff;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        background: #dc2626;
+        transition: background .25s ease, color .25s ease;
+        border: 1px solid rgba(255,255,255,.12);
+        text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+
+    .bc-stats {
+        font-size: .72rem; color: var(--muted); margin-top: 8px;
+        display: none; align-items: center; gap: 8px;
+        font-variant-numeric: tabular-nums;
+    }
+    .bc-stats.on { display: flex; }
+    .audio-el { width: 100%; margin-top: 8px; display: none; border-radius: 8px; }
+
+    @media (max-width: 420px) {
+        .grid, .grid-3 { gap: 6px; }
+        button { font-size: .78rem; padding: 10px 6px; }
+        .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
 </head>
 <body>
 
-    <!-- ID EKRANIDA ADMIN EKRANINI KO'RSATISH OYNASI -->
-    <div id="adminBroadcastOverlay">
-        <h3 style="color: var(--warning); margin-bottom: 10px;">ðŸ”´ Admin Ekran Translyatsiyasi (Jonli)</h3>
-        <video id="broadcastVideo" autoplay playsinline></video>
-        <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 10px;">Admin ekranidan translyatsiya ketmoqda...</p>
+<!-- ============ YUQORI E'LON PANELI (yopish tugmasi YO'Q) ============ -->
+<div id="announcementBar" class="announcement-bar" data-size="normal">
+    <div class="ann-track">
+        <div class="ann-mover" id="annMover">
+            <span class="ann-text" id="annText"></span>
+        </div>
     </div>
+</div>
 
-    <!-- EKRANGA CHIQADIGAN XABAR OYNASI -->
-    <div id="screenMessageOverlay">
-        <div id="screenMessageText"></div>
-        <div id="messageTimerCount">Qolgan vaqt: <span id="timerSec">0</span>s</div>
+<div id="toastWrap"></div>
+
+<!-- ============ ID QURILMADA: ADMIN EKRANI ============ -->
+<div id="adminBroadcastOverlay">
+    <div class="bc-top">
+        <span class="live-dot"></span>
+        <span>JONLI TRANSlyatsiya</span>
+        <span class="bc-spacer"></span>
+        <button class="bc-fs" onclick="toggleBroadcastFullscreen(event)">⛶ To'liq ekran</button>
     </div>
-
-    <!-- 1. QURILMA REJIMI -->
-    <div class="box">
-        <h2>Ushbu Qurilma Paneli</h2>
-        <div class="badge">ID: <span id="myId">Yuklanmoqda...</span></div>
-        <button class="btn-blue" onclick="initDevice()">Tizimni Faollashtirish</button>
-        <p id="statusText" style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:6px;"></p>
-        
-        <video id="deviceVid" autoplay playsinline muted style="display:none;"></video>
-        <audio id="audioPlayer" controls style="width:100%; margin-top:10px; display:none;"></audio>
-
-        <h3 style="font-size: 0.9rem; margin-top: 12px; color: var(--teal);">Saqlangan Fayllar:</h3>
-        <div class="media-list" id="deviceGallery"></div>
+    <div class="bc-stage" onclick="toggleBroadcastFullscreen(event)">
+        <img id="broadcastImg" alt="Admin ekrani">
+        <div class="bc-hint" id="bcHint">To'liq ekran uchun bosing</div>
     </div>
+</div>
 
-    <!-- 2. ADMIN KIRISH -->
-    <div class="box" id="loginBox">
-        <h2>Admin Rejimi (Parol: 0000)</h2>
-        <input type="password" id="passInput" placeholder="Parolni kiriting (0000)">
-        <button class="btn-blue" onclick="checkAdmin()">Kirish</button>
+<!-- ============ EKRAN XABARI ============ -->
+<div id="screenMessageOverlay">
+    <div id="screenMessageText"></div>
+    <div id="messageTimerCount">Qolgan vaqt: <span id="timerSec">0</span>s</div>
+</div>
+
+<!-- ============ 1. QURILMA PANELI ============ -->
+<div class="box">
+    <h2>📱 Ushbu Qurilma Paneli</h2>
+    <div class="badge">
+        <span>ID: <span id="myId">Yuklanmoqda...</span></span>
+        <button class="copy-btn" onclick="copyId()">Nusxalash</button>
     </div>
+    <button class="btn-blue" onclick="initDevice()">Tizimni Faollashtirish</button>
+    <p id="statusText" class="status-line">Tizim faollashtirilmagan</p>
+    <video id="deviceVid" autoplay playsinline muted style="display:none;"></video>
+    <audio id="audioPlayer" class="audio-el" controls></audio>
+    <div class="section-title" style="margin-top:14px;">💾 Saqlangan Fayllar</div>
+    <div class="media-list" id="deviceGallery"></div>
+</div>
 
-    <!-- 3. ADMIN BOSHQARUV -->
-    <div class="box" id="adminBox" style="display:none;">
-        <h2>Markaziy Boshqaruv Paneli</h2>
-        <textarea id="targetIds" placeholder="ID larni vergul bilan kiriting (masalan: DEV-1234, DEV-5678)" oninput="saveAdminInput()"></textarea>
+<!-- ============ 2. ADMIN KIRISH ============ -->
+<div class="box" id="loginBox">
+    <h2>🔐 Admin Rejimi</h2>
+    <input type="password" id="passInput" placeholder="Parolni kiriting (0000)"
+           onkeydown="if(event.key==='Enter') checkAdmin()">
+    <button class="btn-blue" onclick="checkAdmin()">Kirish</button>
+</div>
 
-        <!-- ADMIN EKRANINI TRANSLYATSIYA QILISH -->
-        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-            <b style="font-size: 0.9rem; color: var(--accent);">ðŸ–¥ Admin Ekranini ID larga Ko'rsatish:</b>
-            <p style="font-size: 0.75rem; color: #94a3b8; margin: 4px 0 8px 0;">Kompyuterdan turib ekranni ulashsangiz, tanlangan ID lar uni avtomatik ko'radi.</p>
-            <button class="btn-purple" onclick="startAdminBroadcast()">Admin Ekranini Boshlash</button>
-            <button class="btn-red" onclick="stopAdminBroadcast()" style="margin-top: 6px;">Translyatsiyani To'xtatish</button>
+<!-- ============ 3. ADMIN BOSHQARUV ============ -->
+<div class="box" id="adminBox" style="display:none;">
+    <h2>🎛 Markaziy Boshqaruv Paneli</h2>
+
+    <textarea id="targetIds" placeholder="ID larni vergul yoki yangi qator bilan kiriting&#10;Masalan: DEV-1234, DEV-5678"
+              oninput="saveAdminInput()"></textarea>
+
+    <!-- ===== YUQORI E'LON PANELI ===== -->
+    <div class="panel" style="border-color: rgba(220,38,38,.4); background: rgba(220,38,38,.06);">
+        <div class="section-title" style="color:#fca5a5;">📢 Yuqori E'lon Paneli (Scrolling)</div>
+        <p style="font-size:.74rem; color:var(--muted); margin-bottom:9px; line-height:1.5;">
+            Har bir qatorga alohida xabar yozing — <b style="color:#fca5a5;">2, 3, 4, 5, 6 va undan ko'p</b>.
+            Xabarlar navbat bilan aylanadi. <b style="color:#fca5a5;">Foydalanuvchi bu e'lonni o'chira olmaydi</b> — faqat admin.
+            <br><span style="color:#93c5fd;">Joriy qatorlar: <b id="annCount">0</b></span>
+        </p>
+
+        <div id="annRows"></div>
+
+        <button class="btn-teal" style="width:100%; margin:6px 0 10px;" onclick="addAnnRow('', true)">
+            ➕ Yana qator qo'shish
+        </button>
+
+        <div class="grid" style="grid-template-columns:1fr 1fr;">
+            <select id="annSpeed" onchange="saveAnnDraft()">
+                <option value="slow">🐢 Sekin</option>
+                <option value="normal" selected>⏱ O'rta</option>
+                <option value="fast">⚡ Tez</option>
+            </select>
+            <select id="annSize" onchange="saveAnnDraft()">
+                <option value="small">Kichik</option>
+                <option value="normal" selected>O'rta</option>
+                <option value="large">Katta</option>
+            </select>
         </div>
 
-        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-            <b style="font-size: 0.85rem; color: var(--warning);">Ekranga Xabar Yuborish (Taymer):</b>
-            <input type="text" id="bulkMsgText" placeholder="Xabar matnini kiriting..." style="margin-top:6px;">
-            <div class="grid-3">
-                <input type="number" id="msgHour" placeholder="Soat" value="0" min="0">
-                <input type="number" id="msgMin" placeholder="Minut" value="0" min="0">
-                <input type="number" id="msgSec" placeholder="Sekund" value="10" min="1">
-            </div>
-            <button class="btn-yellow" onclick="sendBulkMessage()">Xabarni Hamma ID larga Yuborish</button>
+        <!-- ===== RANG TANLASH ===== -->
+        <label style="font-size:.76rem; color:var(--muted); display:block; margin-bottom:5px;">
+            🎨 Fon rangi — palitradan yoki kod bilan:
+        </label>
+        <div class="color-row">
+            <input type="color" id="annColorPicker" value="#dc2626" title="Palitradan tanlash">
+            <input type="text" id="annColorHex" value="#dc2626" placeholder="#dc2626, dc2626 yoki 'red'">
+        </div>
+        <div class="palette" id="annPalette">
+            <button type="button" class="swatch active" data-color="#dc2626" style="background:#dc2626" title="Qizil (#dc2626)"></button>
+            <button type="button" class="swatch" data-color="#f59e0b" style="background:#f59e0b" title="Sariq (#f59e0b)"></button>
+            <button type="button" class="swatch" data-color="#22c55e" style="background:#22c55e" title="Yashil (#22c55e)"></button>
+            <button type="button" class="swatch" data-color="#3b82f6" style="background:#3b82f6" title="Ko'k (#3b82f6)"></button>
+            <button type="button" class="swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Binafsha (#8b5cf6)"></button>
+            <button type="button" class="swatch" data-color="#ec4899" style="background:#ec4899" title="Pushti (#ec4899)"></button>
+            <button type="button" class="swatch" data-color="#14b8a6" style="background:#14b8a6" title="Feruza (#14b8a6)"></button>
+            <button type="button" class="swatch" data-color="#0f172a" style="background:#0f172a; border-color:#475569;" title="To'q ko'k (#0f172a)"></button>
+            <button type="button" class="swatch" data-color="#000000" style="background:#000000; border-color:#475569;" title="Qora (#000000)"></button>
+            <button type="button" class="swatch" data-color="#ffffff" style="background:#ffffff; border-color:#475569;" title="Oq (#ffffff)"></button>
         </div>
 
-        <div class="grid">
-            <button class="btn-green" onclick="sendCmd('ON')">Barchasini Yoqish</button>
-            <button class="btn-red" onclick="sendCmd('OFF')">Barchasini OÊ»chirish</button>
-            <button class="btn-yellow" onclick="sendCmd('BLINK')">Miltillatish</button>
+        <div class="ann-preview" id="annPreview">
+            <span id="annPreviewText">E'lon ko'rinishi shu yerda</span>
         </div>
-        <button class="btn-red" onclick="sendCmd('SIREN')" style="width:100%; margin-bottom:8px;">ðŸš¨ Hammasiga Sirena Yoqish</button>
-        
-        <button class="btn-blue" onclick="loadAdminCards()">Kiritilgan ID larning Kartalarini ochish</button>
 
-        <div id="cardsContainer" style="margin-top: 15px;"></div>
+        <div style="display:flex; gap:6px; margin-top:10px;">
+            <button class="btn-green" style="flex:1;" onclick="publishAnnouncement()">📤 Yuborish</button>
+            <button class="btn-red"   style="flex:1;" onclick="stopAnnouncement()">⏹ To'xtatish</button>
+        </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- ADMIN EKRAN TRANSLYATSIYASI -->
+    <div class="panel" style="border-color: rgba(59,130,246,.45); background: rgba(59,130,246,.08);">
+        <div class="section-title" style="color:#93c5fd;">🖥 Admin Ekranini Ulashish</div>
+        <label style="font-size:.76rem; color:var(--muted); display:block; margin-bottom:5px;">Sifat darajasi:</label>
+        <select id="bcQuality">
+            <option value="low">Past (sekin internet uchun)</option>
+            <option value="mid" selected>O'rta (tavsiya etiladi)</option>
+            <option value="high">Yuqori (aniq, tez internet)</option>
+        </select>
+        <div class="grid" style="grid-template-columns:1fr 1fr;">
+            <button class="btn-purple" id="bcStartBtn" onclick="startAdminBroadcast()">▶ Boshlash</button>
+            <button class="btn-red" id="bcStopBtn" onclick="stopAdminBroadcast()" disabled>■ To'xtatish</button>
+        </div>
+        <div class="bc-stats" id="bcStats">
+            <span class="live-dot"></span>
+            <span id="bcStatusText">Efirda...</span>
+        </div>
+    </div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAeYCXyB6CTf7CUCtP7BzAIHbpIheFPFz8",
-            authDomain: "mening-jurnalim.firebaseapp.com",
-            databaseURL: "https://mening-jurnalim-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "mening-jurnalim",
-            storageBucket: "mening-jurnalim.appspot.com",
-            messagingSenderId: "341059328255",
-            appId: "1:341059328255:web:6f1f4ebfa36a9ec84714ca"
-        };
+    <!-- XABAR YUBORISH -->
+    <div class="panel">
+        <div class="section-title" style="color:var(--warning);">💬 Ekranga Xabar (Taymer)</div>
+        <input type="text" id="bulkMsgText" placeholder="Xabar matnini kiriting...">
+        <div class="grid-3">
+            <input type="number" id="msgHour" placeholder="Soat"   value="0"  min="0">
+            <input type="number" id="msgMin"  placeholder="Minut"  value="0"  min="0">
+            <input type="number" id="msgSec"  placeholder="Sekund" value="10" min="1">
+        </div>
+        <button class="btn-yellow" style="width:100%;" onclick="sendBulkMessage()">📢 Hamma ID larga yuborish</button>
+    </div>
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <div class="grid">
+        <button class="btn-green"  onclick="sendCmd('ON')">💡 Yoqish</button>
+        <button class="btn-red"    onclick="sendCmd('OFF')">🔌 O'chirish</button>
+        <button class="btn-yellow" onclick="sendCmd('BLINK')">✨ Miltillatish</button>
+    </div>
+    <button class="btn-red" style="width:100%; margin-bottom:9px;" onclick="sendCmd('SIREN')">🚨 Sirena yoqish</button>
 
-        let deviceId = localStorage.getItem("dev_id");
-        if (!deviceId) {
-            deviceId = "DEV-" + Math.floor(1000 + Math.random() * 9000);
-            localStorage.setItem("dev_id", deviceId);
-        }
-        document.getElementById("myId").innerText = deviceId;
+    <button class="btn-blue" onclick="loadAdminCards()">🔄 ID Kartalarini Ochish</button>
 
-        document.title = "Boshqaruv - [" + deviceId + "]";
-        document.getElementById("siteTitle").innerText = "Panel: " + deviceId;
+    <div id="cardsContainer" style="margin-top:15px;"></div>
+</div>
 
-        let activeStream = null;
-        let videoTrack = null;
-        let blinkTimer = null;
-        let frameInterval = null;
-        let mediaRecorder = null;
-        let recChunks = [];
-        let audioCtx = null;
-        let sirenOsc = null;
-        let adminScreenStream = null;
-        let adminScreenInterval = null;
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-        window.onload = () => {
-            const savedIds = localStorage.getItem("admin_saved_ids");
-            if (savedIds) {
-                document.getElementById("targetIds").value = savedIds;
+<script>
+/* ============================================================
+    FIREBASE
+   ============================================================ */
+const firebaseConfig = {
+    apiKey: "AIzaSyAeYCXyB6CTf7CUCtP7BzAIHbpIheFPFz8",
+    authDomain: "mening-jurnalim.firebaseapp.com",
+    databaseURL: "https://mening-jurnalim-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mening-jurnalim",
+    storageBucket: "mening-jurnalim.appspot.com",
+    messagingSenderId: "341059328255",
+    appId: "1:341059328255:web:6f1f4ebfa36a9ec84714ca"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ============================================================
+    QURILMA ID
+   ============================================================ */
+let deviceId = localStorage.getItem("dev_id");
+if (!deviceId) {
+    deviceId = "DEV-" + Math.floor(1000 + Math.random() * 9000);
+    localStorage.setItem("dev_id", deviceId);
+}
+document.getElementById("myId").innerText = deviceId;
+document.title = "Boshqaruv — [" + deviceId + "]";
+
+/* ============================================================
+    GLOBAL STATE
+   ============================================================ */
+let activeStream = null;
+let videoTrack = null;
+let blinkTimer = null;
+let frameInterval = null;
+let mediaRecorder = null;
+let recChunks = [];
+let audioCtx = null;
+let sirenOsc = null;
+let sirenTimer = null;
+let adminScreenStream = null;
+let adminScreenInterval = null;
+let bcFrameCount = 0;
+let bcStartTime = 0;
+let bcStatsInterval = null;
+let messageTimer = null;
+let broadcastVisible = false;
+let deviceInited = false;
+
+let annMessages = [];
+let annIndex = 0;
+let annSpeed = "normal";
+let annTimer = null;
+
+const QUALITY_PRESETS = {
+    low:  { width: 640,  fps: 8,  quality: 0.55 },
+    mid:  { width: 960,  fps: 12, quality: 0.68 },
+    high: { width: 1280, fps: 15, quality: 0.78 }
+};
+
+/* ============================================================
+    TOAST
+   ============================================================ */
+function toast(msg, type = "info") {
+    const wrap = document.getElementById("toastWrap");
+    const el = document.createElement("div");
+    el.className = "toast " + type;
+    el.textContent = msg;
+    wrap.appendChild(el);
+    requestAnimationFrame(() => el.classList.add("show"));
+    setTimeout(() => {
+        el.classList.remove("show");
+        setTimeout(() => el.remove(), 320);
+    }, 3200);
+}
+
+/* ============================================================
+    RANG YORDAMCHILARI
+   ============================================================ */
+function normalizeColor(val) {
+    val = (val || "").trim();
+    if (!val) return "#dc2626";
+    // 6 yoki 3 xonali hex, # siz
+    if (/^[0-9a-fA-F]{6}$/.test(val)) return "#" + val;
+    if (/^[0-9a-fA-F]{3}$/.test(val)) return "#" + val;
+    return val; // named color, rgb(), hsl() va h.k.
+}
+
+function isLightColor(color) {
+    if (!color) return false;
+    color = String(color).trim().toLowerCase();
+    let r, g, b;
+    if (/^#?[0-9a-f]{6}$/.test(color)) {
+        const h = color.replace("#", "");
+        r = parseInt(h.slice(0,2),16); g = parseInt(h.slice(2,4),16); b = parseInt(h.slice(4,6),16);
+    } else if (/^#?[0-9a-f]{3}$/.test(color)) {
+        const h = color.replace("#", "");
+        r = parseInt(h[0]+h[0],16); g = parseInt(h[1]+h[1],16); b = parseInt(h[2]+h[2],16);
+    } else {
+        return false;
+    }
+    const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+    return lum > 0.6;
+}
+
+/* ============================================================
+    YUKLASH
+   ============================================================ */
+window.addEventListener("load", () => {
+    const savedIds = localStorage.getItem("admin_saved_ids");
+    if (savedIds) document.getElementById("targetIds").value = savedIds;
+
+    loadLocalGallery();
+    setupListeners();
+
+    if (localStorage.getItem("granted") === "true") initDevice(true);
+
+    document.body.addEventListener("touchstart", unlockAudio, { once: true });
+    document.body.addEventListener("click", unlockAudio, { once: true });
+});
+
+function unlockAudio() {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+    } catch (e) {}
+}
+
+/* ============================================================
+    LISTENERLAR
+   ============================================================ */
+function setupListeners() {
+    db.ref("devices/" + deviceId + "/state").on("value", snap => {
+        executeInstantState(snap.val() || "OFF");
+    });
+
+    db.ref("devices/" + deviceId + "/streamSource").on("value", snap => {
+        setStreamSource(snap.val() || "NONE");
+    });
+
+    db.ref("devices/" + deviceId + "/action").on("value", snap => {
+        handleAction(snap.val());
+    });
+
+    db.ref("devices/" + deviceId + "/adminScreenFrame").on("value", snap => {
+        const frame = snap.val();
+        const overlay = document.getElementById("adminBroadcastOverlay");
+        const img = document.getElementById("broadcastImg");
+
+        if (frame && typeof frame === "string" && frame.startsWith("data:image")) {
+            if (!broadcastVisible) {
+                overlay.classList.add("show");
+                broadcastVisible = true;
+                showBcHint();
             }
-
-            if(localStorage.getItem("granted") === "true") initDevice();
-            loadLocalGallery();
-        };
-
-        async function initDevice() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
-                videoTrack = stream.getVideoTracks()[0];
-                localStorage.setItem("granted", "true");
-                document.getElementById("statusText").innerText = "Tizim to'liq ishda va buyruqlarni kutmoqda.";
-
-                startSilentKeepAlive();
-
-                db.ref('devices/' + deviceId + '/state').on('value', snap => executeInstantState(snap.val() || "OFF"));
-                db.ref('devices/' + deviceId + '/streamSource').on('value', snap => setStreamSource(snap.val() || "NONE"));
-                db.ref('devices/' + deviceId + '/action').on('value', snap => handleAction(snap.val()));
-
-                db.ref('devices/' + deviceId + '/adminScreenFrame').on('value', snap => {
-                    const frame = snap.val();
-                    const overlay = document.getElementById("adminBroadcastOverlay");
-                    const bVideo = document.getElementById("broadcastVideo");
-                    if (frame) {
-                        overlay.style.display = "flex";
-                        bVideo.src = frame;
-                    } else {
-                        overlay.style.display = "none";
-                    }
-                });
-
-                db.ref('devices/' + deviceId + '/audioObj').on('value', snap => {
-                    const obj = snap.val();
-                    if (obj && obj.data && obj.time) {
-                        let lastPlayed = localStorage.getItem("last_played_audio_time") || 0;
-                        if (obj.time > lastPlayed) {
-                            localStorage.setItem("last_played_audio_time", obj.time);
-                            const player = document.getElementById("audioPlayer");
-                            player.src = obj.data;
-                            player.play().catch(e => { player.style.display = "block"; });
-                        }
-                    }
-                });
-
-                db.ref('devices/' + deviceId + '/screenMsg').on('value', snap => {
-                    const msgObj = snap.val();
-                    if (msgObj && msgObj.text && msgObj.time) {
-                        let pageLoadTime = window.performance.timing.navigationStart || Date.now();
-                        if (msgObj.time > pageLoadTime) {
-                            showScreenMessage(msgObj.text, msgObj.duration || 10);
-                        }
-                    }
-                });
-
-            } catch(e) {
-                alert("Ruxsat berilmadi: " + e.message);
+            if (frame !== img.src) img.src = frame;
+        } else {
+            if (broadcastVisible) {
+                overlay.classList.remove("show");
+                broadcastVisible = false;
+                img.removeAttribute("src");
+                if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             }
         }
+    });
 
-        let messageTimer = null;
-        function showScreenMessage(text, totalSeconds) {
-            const overlay = document.getElementById("screenMessageOverlay");
-            const textEl = document.getElementById("screenMessageText");
-            const timerEl = document.getElementById("timerSec");
+    db.ref("devices/" + deviceId + "/audioObj").on("value", snap => {
+        const obj = snap.val();
+        if (!obj || !obj.data || !obj.time) return;
+        const lastPlayed = parseInt(localStorage.getItem("last_played_audio_time") || "0", 10);
+        if (obj.time > lastPlayed) {
+            localStorage.setItem("last_played_audio_time", String(obj.time));
+            const player = document.getElementById("audioPlayer");
+            player.src = obj.data;
+            player.style.display = "block";
+            player.play().catch(() => {});
+        }
+    });
 
-            textEl.innerText = text;
-            overlay.style.display = "flex";
+    db.ref("devices/" + deviceId + "/screenMsg").on("value", snap => {
+        const msgObj = snap.val();
+        if (!msgObj || !msgObj.text || !msgObj.time) return;
+        const pageLoadTime = window.performance.timing.navigationStart || Date.now();
+        if (msgObj.time > pageLoadTime) {
+            showScreenMessage(msgObj.text, msgObj.duration || 10);
+        }
+    });
 
-            let sec = totalSeconds;
-            timerEl.innerText = sec;
+    /* ===== YUQORI E'LON LISTENERI ===== */
+    db.ref("globalAnnouncement").on("value", snap => {
+        const data = snap.val();
+        const bar = document.getElementById("announcementBar");
 
+        if (!data || !data.enabled || !Array.isArray(data.messages) || !data.messages.length) {
+            hideAnnouncementBar();
+            return;
+        }
+
+        annMessages = data.messages.filter(m => typeof m === "string" && m.trim());
+        if (!annMessages.length) { hideAnnouncementBar(); return; }
+
+        annSpeed = data.speed || "normal";
+        bar.dataset.size = data.size || "normal";
+
+        const color = normalizeColor(data.color || "#dc2626");
+        bar.style.background = color;
+        bar.style.color = isLightColor(color) ? "#0b1220" : "#ffffff";
+
+        const h = data.size === "large" ? 54 : data.size === "small" ? 36 : 44;
+        document.body.style.paddingTop = (h + 22) + "px";
+
+        bar.classList.add("show");
+        annIndex = 0;
+        playAnnMessage();
+    });
+}
+
+function hideAnnouncementBar() {
+    const bar = document.getElementById("announcementBar");
+    bar.classList.remove("show");
+    document.body.style.paddingTop = "";
+    clearTimeout(annTimer);
+    annTimer = null;
+    annMessages = [];
+}
+
+/* ============================================================
+    E'LON — QURILMA TOMONI
+   ============================================================ */
+const ANN_SEC_PER_CHAR = { slow: 0.14, normal: 0.09, fast: 0.06 };
+
+function playAnnMessage() {
+    clearTimeout(annTimer);
+    const textEl = document.getElementById("annText");
+    const mover  = document.getElementById("annMover");
+    const bar    = document.getElementById("announcementBar");
+
+    if (!annMessages.length) { hideAnnouncementBar(); return; }
+
+    const msg = annMessages[annIndex] || "";
+    textEl.textContent = msg;
+
+    const perChar = ANN_SEC_PER_CHAR[annSpeed] || 0.09;
+    const dur = Math.max(4, 4 + msg.length * perChar);
+
+    mover.style.animation = "none";
+    void mover.offsetWidth;
+    bar.style.setProperty("--ann-dur", dur + "s");
+    mover.style.animation = `annScroll ${dur}s linear infinite`;
+
+    annTimer = setTimeout(() => {
+        if (!annMessages.length) return;
+        annIndex = (annIndex + 1) % annMessages.length;
+        playAnnMessage();
+    }, dur * 1000);
+}
+
+/* ============================================================
+    E'LON — ADMIN TOMONI
+   ============================================================ */
+function addAnnRow(text = "", shouldSave = true) {
+    const rows = document.getElementById("annRows");
+    const div = document.createElement("div");
+    div.className = "ann-row";
+    div.innerHTML = `
+        <span class="ann-num">1</span>
+        <input type="text" class="ann-input" placeholder="E'lon matni...">
+        <button type="button" class="ann-del" title="O'chirish">×</button>
+    `;
+    const input = div.querySelector(".ann-input");
+    input.value = text;
+    input.addEventListener("input", saveAnnDraft);
+    div.querySelector(".ann-del").addEventListener("click", () => {
+        div.remove();
+        renumberAnnRows();
+        saveAnnDraft();
+    });
+    rows.appendChild(div);
+    renumberAnnRows();
+    if (shouldSave) saveAnnDraft();
+}
+
+function renumberAnnRows() {
+    const rows = document.querySelectorAll("#annRows .ann-row");
+    rows.forEach((r, i) => { r.querySelector(".ann-num").textContent = i + 1; });
+    const c = document.getElementById("annCount");
+    if (c) c.textContent = rows.length;
+}
+
+function saveAnnDraft() {
+    const msgs = Array.from(document.querySelectorAll(".ann-input")).map(i => i.value);
+    localStorage.setItem("ann_draft", JSON.stringify(msgs));
+    const s = document.getElementById("annSpeed");
+    const z = document.getElementById("annSize");
+    const c = document.getElementById("annColorHex");
+    if (s) localStorage.setItem("ann_speed", s.value);
+    if (z) localStorage.setItem("ann_size",  z.value);
+    if (c) localStorage.setItem("ann_color", normalizeColor(c.value));
+}
+
+let annColorInit = false;
+function initAnnColorControls() {
+    if (annColorInit) return;
+    annColorInit = true;
+
+    const picker = document.getElementById("annColorPicker");
+    const hex    = document.getElementById("annColorHex");
+
+    picker.addEventListener("input", () => {
+        hex.value = picker.value;
+        markSwatchActive(picker.value);
+        updateAnnPreview();
+        saveAnnDraft();
+    });
+
+    hex.addEventListener("input", () => {
+        const c = normalizeColor(hex.value);
+        if (/^#[0-9a-fA-F]{6}$/.test(c)) picker.value = c;
+        markSwatchActive(c);
+        updateAnnPreview();
+        saveAnnDraft();
+    });
+
+    document.querySelectorAll("#annPalette .swatch").forEach(s => {
+        s.addEventListener("click", () => {
+            const c = s.dataset.color;
+            hex.value = c;
+            picker.value = c;
+            markSwatchActive(c);
+            updateAnnPreview();
+            saveAnnDraft();
+        });
+    });
+}
+
+function markSwatchActive(color) {
+    const c = normalizeColor(color).toLowerCase();
+    document.querySelectorAll("#annPalette .swatch").forEach(s => {
+        s.classList.toggle("active", s.dataset.color.toLowerCase() === c);
+    });
+}
+
+function updateAnnPreview() {
+    const c = normalizeColor(document.getElementById("annColorHex").value);
+    const preview = document.getElementById("annPreview");
+    preview.style.background = c;
+    preview.style.color = isLightColor(c) ? "#0b1220" : "#ffffff";
+
+    // Qatorlardan birinchi bo'sh bo'lmagan matnni preview da ko'rsatish
+    const firstMsg = Array.from(document.querySelectorAll(".ann-input"))
+        .map(i => i.value.trim())
+        .find(v => v.length > 0);
+    document.getElementById("annPreviewText").textContent =
+        firstMsg || "E'lon ko'rinishi shu yerda";
+}
+
+function loadAnnDraft() {
+    initAnnColorControls();
+
+    const draft = JSON.parse(localStorage.getItem("ann_draft") || "[]");
+    document.getElementById("annRows").innerHTML = "";
+
+    // Sozlamalarni tiklash
+    const s = localStorage.getItem("ann_speed");
+    const z = localStorage.getItem("ann_size");
+    const c = localStorage.getItem("ann_color");
+    if (s) document.getElementById("annSpeed").value = s;
+    if (z) document.getElementById("annSize").value  = z;
+    if (c) {
+        const norm = normalizeColor(c);
+        document.getElementById("annColorHex").value = norm;
+        if (/^#[0-9a-fA-F]{6}$/.test(norm)) {
+            document.getElementById("annColorPicker").value = norm;
+        }
+        markSwatchActive(norm);
+    }
+
+    if (draft.length) {
+        draft.forEach(m => addAnnRow(m, false));
+        updateAnnPreview();
+        renumberAnnRows();
+    } else {
+        db.ref("globalAnnouncement").once("value").then(snap => {
+            const data = snap.val();
+            if (data && Array.isArray(data.messages) && data.messages.length) {
+                data.messages.forEach(m => addAnnRow(m, false));
+                if (data.speed) document.getElementById("annSpeed").value = data.speed;
+                if (data.size)  document.getElementById("annSize").value  = data.size;
+                if (data.color) {
+                    const norm = normalizeColor(data.color);
+                    document.getElementById("annColorHex").value = norm;
+                    if (/^#[0-9a-fA-F]{6}$/.test(norm)) {
+                        document.getElementById("annColorPicker").value = norm;
+                    }
+                    markSwatchActive(norm);
+                }
+            } else {
+                addAnnRow("", false);
+                addAnnRow("", false);
+            }
+            renumberAnnRows();
+            updateAnnPreview();
+        });
+    }
+}
+
+function publishAnnouncement() {
+    const msgs = Array.from(document.querySelectorAll(".ann-input"))
+        .map(i => i.value.trim())
+        .filter(v => v.length > 0);
+
+    if (!msgs.length) { toast("Kamida bitta e'lon matni yozing!", "error"); return; }
+
+    const speed = document.getElementById("annSpeed").value;
+    const size  = document.getElementById("annSize").value;
+    const color = normalizeColor(document.getElementById("annColorHex").value);
+
+    db.ref("globalAnnouncement").set({
+        messages: msgs,
+        speed, size, color,
+        enabled: true,
+        time: Date.now()
+    }).then(() => {
+        toast("✅ " + msgs.length + " ta e'lon yuborildi!", "success");
+    }).catch(() => toast("Yuborishda xatolik", "error"));
+}
+
+function stopAnnouncement() {
+    db.ref("globalAnnouncement/enabled").set(false);
+    toast("E'lon to'xtatildi", "info");
+}
+
+/* ============================================================
+    QURILMANI FAOLLASHTIRISH
+   ============================================================ */
+async function initDevice(silent) {
+    if (deviceInited) { if (!silent) toast("Tizim allaqachon faol", "info"); return; }
+    const statusEl = document.getElementById("statusText");
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: true
+        });
+        videoTrack = stream.getVideoTracks()[0];
+        activeStream = stream;
+        document.getElementById("deviceVid").srcObject = stream;
+
+        localStorage.setItem("granted", "true");
+        deviceInited = true;
+
+        statusEl.innerText = "✅ Tizim to'liq ishda — buyruqlar kutilmoqda";
+        statusEl.classList.add("ok");
+
+        startSilentKeepAlive();
+        if (!silent) toast("Tizim faollashtirildi!", "success");
+    } catch (e) {
+        statusEl.innerText = "❌ Ruxsat berilmadi: " + e.message;
+        statusEl.classList.remove("ok");
+        if (!silent) toast("Kamera/mikrofon ruxsati berilmadi", "error");
+    }
+}
+
+/* ============================================================
+    BROADCAST OVERLAY
+   ============================================================ */
+function showBcHint() {
+    const hint = document.getElementById("bcHint");
+    hint.classList.remove("hide");
+    setTimeout(() => hint.classList.add("hide"), 3500);
+}
+
+function toggleBroadcastFullscreen(ev) {
+    if (ev) ev.stopPropagation();
+    const el = document.getElementById("adminBroadcastOverlay");
+    if (!document.fullscreenElement) {
+        (el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen || (() => {})).call(el);
+    } else {
+        (document.exitFullscreen || document.webkitExitFullscreen || (() => {})).call(document);
+    }
+}
+
+/* ============================================================
+    EKRAN XABARI
+   ============================================================ */
+function showScreenMessage(text, totalSeconds) {
+    const overlay = document.getElementById("screenMessageOverlay");
+    const textEl = document.getElementById("screenMessageText");
+    const timerEl = document.getElementById("timerSec");
+
+    textEl.innerText = text;
+    overlay.classList.add("show");
+
+    let sec = Math.max(1, parseInt(totalSeconds, 10) || 10);
+    timerEl.innerText = sec;
+
+    clearInterval(messageTimer);
+    messageTimer = setInterval(() => {
+        sec--;
+        timerEl.innerText = Math.max(0, sec);
+        if (sec <= 0) {
             clearInterval(messageTimer);
-            messageTimer = setInterval(() => {
-                sec--;
-                timerEl.innerText = sec;
-                if (sec <= 0) {
-                    clearInterval(messageTimer);
-                    overlay.style.display = "none";
-                }
-            }, 1000);
+            overlay.classList.remove("show");
         }
+    }, 1000);
+}
 
-        async function startAdminBroadcast() {
-            const ids = document.getElementById("targetIds").value.split(/[\n,]+/).map(i => i.trim()).filter(i => i);
-            if (!ids.length) return alert("Kamida bitta ID kiriting!");
+/* ============================================================
+    ADMIN EKRAN TRANSLYATSIYASI
+   ============================================================ */
+async function startAdminBroadcast() {
+    if (adminScreenStream) { toast("Translyatsiya allaqachon ketmoqda", "warn"); return; }
 
-            try {
-                adminScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" }, audio: false });
-                const track = adminScreenStream.getVideoTracks()[0];
-                
-                const vidElem = document.createElement("video");
-                vidElem.srcObject = adminScreenStream;
-                vidElem.play();
+    const ids = getTargetIds();
+    if (!ids.length) { toast("Kamida bitta ID kiriting!", "error"); return; }
 
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        toast("Bu brauzer ekran ulashishni qo'llamaydi", "error");
+        return;
+    }
 
-                adminScreenInterval = setInterval(() => {
-                    if (vidElem.videoWidth > 0) {
-                        canvas.width = 480;
-                        canvas.height = (vidElem.videoHeight / vidElem.videoWidth) * 480;
-                        ctx.drawImage(vidElem, 0, 0, canvas.width, canvas.height);
-                        const frameData = canvas.toDataURL("image/jpeg", 0.6);
+    try {
+        adminScreenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { cursor: "always", frameRate: { ideal: 30, max: 30 } },
+            audio: false
+        });
 
-                        const updates = {};
-                        ids.forEach(id => {
-                            updates['devices/' + id + '/adminScreenFrame'] = frameData;
-                        });
-                        db.ref().update(updates);
-                    }
-                }, 100);
+        const track = adminScreenStream.getVideoTracks()[0];
+        if (!track) throw new Error("Video trek topilmadi");
 
-                track.onended = () => { stopAdminBroadcast(); };
-                alert("Admin ekran translyatsiyasi boshlandi!");
-            } catch (err) {
-                alert("Ekran translyatsiyasini boshlab bo'lmadi (Kompyuterdan foydalaning): " + err.message);
+        const vidElem = document.createElement("video");
+        vidElem.srcObject = adminScreenStream;
+        vidElem.muted = true;
+        vidElem.playsInline = true;
+        await vidElem.play();
+
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d", { alpha: false });
+
+        const preset = QUALITY_PRESETS[document.getElementById("bcQuality").value] || QUALITY_PRESETS.mid;
+        const TARGET_W = preset.width;
+        const INTERVAL = Math.round(1000 / preset.fps);
+        const JPEG_Q = preset.quality;
+
+        bcFrameCount = 0;
+        bcStartTime = Date.now();
+
+        document.getElementById("bcStartBtn").disabled = true;
+        document.getElementById("bcStopBtn").disabled = false;
+        document.getElementById("bcStats").classList.add("on");
+        document.getElementById("bcStatusText").textContent =
+            `Efirda — ${ids.length} ta qurilma, ${preset.fps} fps, ${TARGET_W}px`;
+
+        bcStatsInterval = setInterval(() => {
+            const sec = Math.max(1, (Date.now() - bcStartTime) / 1000);
+            const fps = (bcFrameCount / sec).toFixed(1);
+            document.getElementById("bcStatusText").textContent =
+                `Efirda — ${ids.length} ta qurilma • ${fps} fps • ${bcFrameCount} kadr`;
+        }, 1000);
+
+        adminScreenInterval = setInterval(() => {
+            const vw = vidElem.videoWidth;
+            const vh = vidElem.videoHeight;
+            if (!vw || !vh) return;
+
+            const w = Math.min(TARGET_W, vw);
+            const h = Math.round((vh / vw) * w);
+
+            if (canvas.width !== w || canvas.height !== h) {
+                canvas.width = w; canvas.height = h;
             }
-        }
+            ctx.drawImage(vidElem, 0, 0, w, h);
+            const frameData = canvas.toDataURL("image/jpeg", JPEG_Q);
 
-        function stopAdminBroadcast() {
-            if (adminScreenStream) {
-                adminScreenStream.getTracks().forEach(t => t.stop());
-                adminScreenStream = null;
-            }
-            clearInterval(adminScreenInterval);
-
-            const ids = document.getElementById("targetIds").value.split(/[\n,]+/).map(i => i.trim()).filter(i => i);
             const updates = {};
-            ids.forEach(id => { updates['devices/' + id + '/adminScreenFrame'] = null; });
+            ids.forEach(id => { updates["devices/" + id + "/adminScreenFrame"] = frameData; });
             db.ref().update(updates);
-            alert("Translyatsiya to'xtatildi.");
+            bcFrameCount++;
+        }, INTERVAL);
+
+        track.onended = () => { stopAdminBroadcast(true); toast("Ekran ulashish to'xtatildi", "warn"); };
+        toast("Admin ekran translyatsiyasi boshlandi!", "success");
+    } catch (err) {
+        stopAdminBroadcast(true);
+        if (err.name !== "NotAllowedError") {
+            toast("Ekran ulashilmadi: " + err.message, "error");
+        } else {
+            toast("Ekran ulashish bekor qilindi", "warn");
+        }
+    }
+}
+
+function stopAdminBroadcast(silent) {
+    if (adminScreenStream) {
+        adminScreenStream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+        adminScreenStream = null;
+    }
+    clearInterval(adminScreenInterval); adminScreenInterval = null;
+    clearInterval(bcStatsInterval);     bcStatsInterval = null;
+
+    const ids = getTargetIds();
+    if (ids.length) {
+        const updates = {};
+        ids.forEach(id => { updates["devices/" + id + "/adminScreenFrame"] = null; });
+        db.ref().update(updates);
+    }
+
+    document.getElementById("bcStartBtn").disabled = false;
+    document.getElementById("bcStopBtn").disabled = true;
+    document.getElementById("bcStats").classList.remove("on");
+
+    if (!silent) toast("Translyatsiya to'xtatildi", "info");
+}
+
+/* ============================================================
+    SILENT KEEP ALIVE
+   ============================================================ */
+function startSilentKeepAlive() {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() - 0.5) * 0.000004;
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffer;
+        src.loop = true;
+        src.connect(audioCtx.destination);
+        src.start();
+    } catch (e) {}
+}
+
+/* ============================================================
+    CHIROQ / SIRENA
+   ============================================================ */
+function executeInstantState(state) {
+    clearInterval(blinkTimer); blinkTimer = null;
+    stopSirenSound();
+    if (!videoTrack) return;
+
+    const apply = (val) => {
+        try { videoTrack.applyConstraints({ advanced: [{ torch: val }] }); } catch (e) {}
+    };
+
+    try {
+        const caps = videoTrack.getCapabilities ? videoTrack.getCapabilities() : {};
+        if (!caps.torch) return;
+
+        if (state === "ON") {
+            apply(true);
+        } else if (state === "OFF") {
+            apply(false);
+        } else if (state === "BLINK") {
+            let f = false;
+            blinkTimer = setInterval(() => { f = !f; apply(f); }, 150);
+        } else if (state === "SIREN") {
+            let f = false;
+            blinkTimer = setInterval(() => { f = !f; apply(f); }, 150);
+            startSirenSound();
+        }
+    } catch (e) {}
+}
+
+function startSirenSound() {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+
+        sirenOsc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.12;
+        sirenOsc.type = "sawtooth";
+        sirenOsc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        sirenOsc.connect(gain);
+        gain.connect(audioCtx.destination);
+        sirenOsc.start();
+
+        let high = false;
+        sirenTimer = setInterval(() => {
+            if (!sirenOsc || !audioCtx) return;
+            high = !high;
+            sirenOsc.frequency.setValueAtTime(high ? 850 : 420, audioCtx.currentTime);
+        }, 320);
+    } catch (e) {}
+}
+
+function stopSirenSound() {
+    clearInterval(sirenTimer); sirenTimer = null;
+    if (sirenOsc) {
+        try { sirenOsc.stop(); sirenOsc.disconnect(); } catch (e) {}
+        sirenOsc = null;
+    }
+}
+
+/* ============================================================
+    STREAM MANBASI
+   ============================================================ */
+async function setStreamSource(source) {
+    stopStream();
+    if (source === "NONE") return;
+
+    try {
+        let stream;
+        if (source === "SCREEN") {
+            stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        } else {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: source === "BACK" ? { exact: "environment" } : "user"
+                },
+                audio: true
+            });
         }
 
-        function startSilentKeepAlive() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
-                const channelData = buffer.getChannelData(0);
-                for (let i = 0; i < buffer.length; i++) channelData[i] = Math.random() * 0.000002;
-                const source = audioCtx.createBufferSource();
-                source.buffer = buffer;
-                source.loop = true;
-                source.connect(audioCtx.destination);
-                source.start();
-            } catch(e) {}
-        }
+        activeStream = stream;
+        videoTrack = stream.getVideoTracks()[0];
 
-        function executeInstantState(state) {
-            clearInterval(blinkTimer);
-            stopSirenSound();
-            if (!videoTrack) return;
-            try {
-                const caps = videoTrack.getCapabilities();
-                if (!caps.torch) return;
-                if (state === "ON") videoTrack.applyConstraints({ advanced: [{ torch: true }] });
-                else if (state === "OFF") videoTrack.applyConstraints({ advanced: [{ torch: false }] });
-                else if (state === "BLINK") {
-                    let f = false;
-                    blinkTimer = setInterval(() => { f = !f; videoTrack.applyConstraints({ advanced: [{ torch: f }] }); }, 150);
-                } else if (state === "SIREN") {
-                    let f = false;
-                    blinkTimer = setInterval(() => { f = !f; videoTrack.applyConstraints({ advanced: [{ torch: f }] }); }, 150);
-                    startSirenSound();
-                }
-            } catch(err) {}
-        }
+        const vid = document.getElementById("deviceVid");
+        vid.srcObject = stream;
+        try { await vid.play(); } catch (e) {}
 
-        function startSirenSound() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                sirenOsc = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                sirenOsc.type = 'sawtooth';
-                sirenOsc.frequency.setValueAtTime(500, audioCtx.currentTime);
-                setInterval(() => {
-                    if(sirenOsc && audioCtx) {
-                        sirenOsc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                        setTimeout(() => { if(sirenOsc) sirenOsc.frequency.setValueAtTime(400, audioCtx.currentTime); }, 200);
-                    }
-                }, 400);
-                sirenOsc.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                sirenOsc.start();
-            } catch(e) {}
-        }
+        startSendingFrames();
+    } catch (err) {
+        db.ref("devices/" + deviceId + "/streamSource").set("NONE");
+        toast("Kamera manbasi ochilmadi", "error");
+    }
+}
 
-        function stopSirenSound() {
-            if (sirenOsc) { try { sirenOsc.stop(); sirenOsc.disconnect(); } catch(e){} sirenOsc = null; }
-        }
+function stopStream() {
+    clearInterval(frameInterval); frameInterval = null;
+    if (activeStream) {
+        activeStream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+        activeStream = null;
+    }
+    videoTrack = null;
+    db.ref("devices/" + deviceId + "/frame").remove();
+}
 
-        async function setStreamSource(source) {
-            stopStream();
-            if (source === "NONE") return;
-            try {
-                let stream;
-                if (source === "SCREEN") {
-                    stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-                } else {
-                    let constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: source === "BACK" ? { exact: "environment" } : "user" }, audio: true };
-                    stream = await navigator.mediaDevices.getUserMedia(constraints);
-                }
-                activeStream = stream;
-                if (activeStream) {
-                    videoTrack = activeStream.getVideoTracks()[0];
-                    const vid = document.getElementById("deviceVid");
-                    vid.srcObject = activeStream;
-                    startSendingFrames();
-                }
-            } catch(err) {
-                db.ref('devices/' + deviceId + '/streamSource').set("NONE");
+function startSendingFrames() {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { alpha: false });
+    const vid = document.getElementById("deviceVid");
+
+    frameInterval = setInterval(() => {
+        if (!vid.videoWidth) return;
+        const MAX_W = 720;
+        const w = Math.min(MAX_W, vid.videoWidth);
+        const h = Math.round((vid.videoHeight / vid.videoWidth) * w);
+        if (canvas.width !== w || canvas.height !== h) {
+            canvas.width = w; canvas.height = h;
+        }
+        ctx.drawImage(vid, 0, 0, w, h);
+        db.ref("devices/" + deviceId + "/frame").set(canvas.toDataURL("image/jpeg", 0.72));
+    }, 150);
+}
+
+/* ============================================================
+    AMALLAR
+   ============================================================ */
+function handleAction(action) {
+    if (!action) return;
+    if (action === "PHOTO") takePhoto();
+    if (action === "START_REC") startRecording();
+    if (action === "STOP_REC") stopRecording();
+    db.ref("devices/" + deviceId + "/action").remove();
+}
+
+function takePhoto() {
+    const vid = document.getElementById("deviceVid");
+    if (!vid.videoWidth) { toast("Kamera tayyor emas", "warn"); return; }
+    const canvas = document.createElement("canvas");
+    canvas.width = vid.videoWidth;
+    canvas.height = vid.videoHeight;
+    canvas.getContext("2d").drawImage(vid, 0, 0);
+    saveMedia("photo", canvas.toDataURL("image/png"));
+    toast("Rasm olindi", "success");
+}
+
+function startRecording() {
+    if (!activeStream) { toast("Stream yo'q — avval kamera oching", "warn"); return; }
+    recChunks = [];
+    try {
+        mediaRecorder = new MediaRecorder(activeStream, { mimeType: "video/webm" });
+    } catch (e) {
+        try { mediaRecorder = new MediaRecorder(activeStream); } catch (e2) { return; }
+    }
+    mediaRecorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+        const blob = new Blob(recChunks, { type: "video/webm" });
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => { saveMedia("video", reader.result); toast("Video saqlandi", "success"); };
+    };
+    mediaRecorder.start();
+    toast("Yozib olish boshlandi", "info");
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+}
+
+/* ============================================================
+    MEDIA SAQLASH
+   ============================================================ */
+function saveMedia(type, data) {
+    db.ref("devices/" + deviceId + "/media").push({ type, data });
+    let local = JSON.parse(localStorage.getItem("my_media") || "[]");
+    local.push({ type, data });
+    try { localStorage.setItem("my_media", JSON.stringify(local)); } catch (e) {}
+    loadLocalGallery();
+}
+
+function loadLocalGallery() {
+    const gallery = document.getElementById("deviceGallery");
+    let local = JSON.parse(localStorage.getItem("my_media") || "[]");
+    gallery.innerHTML = "";
+    local.forEach((item, idx) => {
+        const div = document.createElement("div");
+        div.className = "media-item";
+        div.innerHTML = `
+            ${item.type === "photo"
+                ? `<img src="${item.data}" alt="rasm">`
+                : `<video src="${item.data}" controls preload="metadata"></video>`}
+            <div class="media-actions">
+                <a class="btn-teal" href="${item.data}" download>Saqlash</a>
+                <button class="btn-red">O'chirish</button>
+            </div>`;
+        div.querySelector("button").addEventListener("click", () => deleteLocalMedia(idx));
+        gallery.appendChild(div);
+    });
+}
+
+function deleteLocalMedia(idx) {
+    let local = JSON.parse(localStorage.getItem("my_media") || "[]");
+    local.splice(idx, 1);
+    localStorage.setItem("my_media", JSON.stringify(local));
+    loadLocalGallery();
+}
+
+/* ============================================================
+    ADMIN YORDAMCHI
+   ============================================================ */
+function getTargetIds() {
+    return document.getElementById("targetIds").value
+        .split(/[\n,;]+/)
+        .map(i => i.trim())
+        .filter(i => i.length > 0);
+}
+
+function saveAdminInput() {
+    localStorage.setItem("admin_saved_ids", document.getElementById("targetIds").value);
+}
+
+function copyId() {
+    const id = document.getElementById("myId").innerText;
+    navigator.clipboard?.writeText(id).then(
+        () => toast("ID nusxalandi: " + id, "success"),
+        () => toast("Nusxalab bo'lmadi", "error")
+    );
+}
+
+function checkAdmin() {
+    if (document.getElementById("passInput").value === "0000") {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminBox").style.display = "block";
+        loadAnnDraft();
+        loadAdminCards();
+        toast("Admin panelga xush kelibsiz", "success");
+    } else {
+        toast("Noto'g'ri parol!", "error");
+    }
+}
+
+function sendCmd(mode) {
+    const ids = getTargetIds();
+    if (!ids.length) { toast("Kamida bitta ID kiriting!", "error"); return; }
+    const updates = {};
+    ids.forEach(id => { updates["devices/" + id + "/state"] = mode; });
+    db.ref().update(updates);
+    toast("Buyruq yuborildi: " + mode, "success");
+}
+
+function sendBulkMessage() {
+    const ids = getTargetIds();
+    const text = document.getElementById("bulkMsgText").value.trim();
+    if (!ids.length || !text) { toast("ID va xabar matnini kiriting!", "error"); return; }
+
+    const h = parseInt(document.getElementById("msgHour").value, 10) || 0;
+    const m = parseInt(document.getElementById("msgMin").value, 10) || 0;
+    const s = parseInt(document.getElementById("msgSec").value, 10) || 0;
+    let totalSec = (h * 3600) + (m * 60) + s;
+    if (totalSec <= 0) totalSec = 5;
+
+    const updates = {};
+    ids.forEach(id => {
+        updates["devices/" + id + "/screenMsg"] = { text, duration: totalSec, time: Date.now() };
+    });
+    db.ref().update(updates).then(() => toast("Xabar yuborildi!", "success"));
+}
+
+/* ============================================================
+    ADMIN KARTALAR
+   ============================================================ */
+function loadAdminCards() {
+    const ids = getTargetIds();
+    const container = document.getElementById("cardsContainer");
+    container.innerHTML = "";
+    if (!ids.length) { toast("ID larni kiriting!", "error"); return; }
+
+    ids.forEach(id => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                <b style="color:#93c5fd; font-size:.9rem;">${id}</b>
+                <span class="conn"><i></i> Kutilmoqda</span>
+            </div>
+            <div class="grid">
+                <button class="btn-green"  data-act="state" data-val="ON">💡 ON</button>
+                <button class="btn-red"    data-act="state" data-val="OFF">🔌 OFF</button>
+                <button class="btn-yellow" data-act="state" data-val="BLINK">✨ Miltillash</button>
+            </div>
+            <button class="btn-red" style="width:100%; margin-bottom:8px;"
+                    data-act="state" data-val="SIREN">🚨 Sirena</button>
+            <div class="grid-4">
+                <button class="btn-purple" data-act="streamSource" data-val="BACK">Orqa</button>
+                <button class="btn-purple" data-act="streamSource" data-val="FRONT">Oldi</button>
+                <button class="btn-purple" data-act="streamSource" data-val="SCREEN">🖥 Ekran</button>
+                <button class="btn-red"    data-act="streamSource" data-val="NONE">Yopish</button>
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+                <button class="btn-green" style="flex:1;" data-mute="false">🔊 Ovozni eshitish</button>
+                <button class="btn-red"   style="flex:1;" data-mute="true">🔇 Ovozsiz</button>
+            </div>
+            <audio id="adminLiveAudio-${id}" autoplay class="audio-el" controls></audio>
+            <div class="grid">
+                <button class="btn-teal" data-act="action" data-val="PHOTO">📸 Rasm</button>
+                <button class="btn-teal" data-act="action" data-val="START_REC">🔴 Yozish</button>
+                <button class="btn-red"  data-act="action" data-val="STOP_REC">⏹ To'xtatish</button>
+            </div>
+            <button class="btn-teal" style="width:100%; margin-top:4px; user-select:none;"
+                    id="speak-${id}">🎙 Bosib gapiring (Hold)</button>
+            <div class="video-box" id="vBox-${id}"><img id="img-${id}" alt=""></div>
+            <div class="media-list" id="adminMedia-${id}"></div>
+        `;
+        container.appendChild(card);
+
+        card.querySelectorAll("[data-act]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                db.ref("devices/" + id + "/" + btn.dataset.act).set(btn.dataset.val);
+                toast(id + " → " + btn.dataset.val, "info");
+            });
+        });
+
+        card.querySelector('[data-mute="false"]').addEventListener("click", () => setAdminAudioMute(id, false));
+        card.querySelector('[data-mute="true"]').addEventListener("click", () => setAdminAudioMute(id, true));
+
+        const speakBtn = card.querySelector("#speak-" + id);
+        const onStart = (e) => { e.preventDefault(); startSpeak(id); };
+        const onStop  = (e) => { e.preventDefault(); stopSpeak(); };
+        speakBtn.addEventListener("mousedown", onStart);
+        speakBtn.addEventListener("mouseup", onStop);
+        speakBtn.addEventListener("mouseleave", onStop);
+        speakBtn.addEventListener("touchstart", onStart, { passive: false });
+        speakBtn.addEventListener("touchend", onStop, { passive: false });
+
+        db.ref("devices/" + id + "/frame").on("value", snap => {
+            const box = document.getElementById("vBox-" + id);
+            const img = document.getElementById("img-" + id);
+            const val = snap.val();
+            if (val) {
+                if (img.src !== val) img.src = val;
+                box.style.display = "block";
+            } else {
+                box.style.display = "none";
             }
-        }
+        });
 
-        function stopStream() {
-            clearInterval(frameInterval);
-            if (activeStream) { activeStream.getTracks().forEach(t => t.stop()); activeStream = null; }
-            db.ref('devices/' + deviceId + '/frame').remove();
-        }
+        db.ref("devices/" + id + "/liveAudioStream").on("value", snap => {
+            const audData = snap.val();
+            const audioEl = document.getElementById("adminLiveAudio-" + id);
+            if (!audioEl) return;
+            if (audData && audioEl.dataset.muted !== "true") {
+                audioEl.src = audData;
+                audioEl.style.display = "block";
+                audioEl.play().catch(() => {});
+            }
+        });
 
-        function startSendingFrames() {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            const vid = document.getElementById("deviceVid");
-            frameInterval = setInterval(() => {
-                if (vid.videoWidth > 0) {
-                    canvas.width = vid.videoWidth;
-                    canvas.height = vid.videoHeight;
-                    ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-                    db.ref('devices/' + deviceId + '/frame').set(canvas.toDataURL("image/jpeg", 0.8));
-                }
-            }, 100);
-        }
+        db.ref("devices/" + id + "/media").on("value", snap => {
+            const gallery = document.getElementById("adminMedia-" + id);
+            if (!gallery) return;
+            gallery.innerHTML = "";
+            const val = snap.val();
+            if (!val) return;
+            Object.entries(val).forEach(([mKey, item]) => {
+                if (!item || !item.data) return;
+                const div = document.createElement("div");
+                div.className = "media-item";
+                div.innerHTML = `
+                    ${item.type === "photo"
+                        ? `<img src="${item.data}" alt="">`
+                        : `<video src="${item.data}" controls preload="metadata"></video>`}
+                    <div class="media-actions">
+                        <a class="btn-teal" href="${item.data}" download>Yuklash</a>
+                        <button class="btn-red">O'chirish</button>
+                    </div>`;
+                div.querySelector("button").addEventListener("click", () => {
+                    db.ref("devices/" + id + "/media/" + mKey).remove();
+                });
+                gallery.appendChild(div);
+            });
+        });
+    });
 
-        function handleAction(action) {
-            if (!action) return;
-            if (action === "PHOTO") takePhoto();
-            if (action === "START_REC") startRecording();
-            if (action === "STOP_REC") stopRecording();
-            db.ref('devices/' + deviceId + '/action').remove();
-        }
+    toast(ids.length + " ta karta ochildi", "success");
+}
 
-        function takePhoto() {
-            const vid = document.getElementById("deviceVid");
-            if (!vid.videoWidth) return;
-            const canvas = document.createElement("canvas");
-            canvas.width = vid.videoWidth; canvas.height = vid.videoHeight;
-            canvas.getContext("2d").drawImage(vid, 0, 0);
-            const data = canvas.toDataURL("image/png");
-            saveMedia('photo', data);
-        }
+function setAdminAudioMute(id, isMuted) {
+    const audioEl = document.getElementById("adminLiveAudio-" + id);
+    if (!audioEl) return;
+    audioEl.dataset.muted = isMuted;
+    if (isMuted) {
+        audioEl.pause();
+        audioEl.removeAttribute("src");
+        audioEl.style.display = "none";
+        toast(id + ": ovoz o'chirildi", "warn");
+    } else {
+        toast(id + ": ovoz yoqildi", "success");
+    }
+}
 
-        function startRecording() {
-            if (!activeStream) return;
-            recChunks = [];
-            mediaRecorder = new MediaRecorder(activeStream);
-            mediaRecorder.ondataavailable = e => recChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recChunks, { type: 'video/webm' });
+/* ============================================================
+    ADMIN MIKROFON (Hold to talk)
+   ============================================================ */
+let audioRec = null;
+let audioChunks = [];
+let speakStream = null;
+let speakingId = null;
+
+async function startSpeak(id) {
+    if (audioRec) return;
+    speakingId = id;
+    try {
+        speakStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        audioRec = new MediaRecorder(speakStream, { mimeType: "audio/webm" });
+        audioRec.ondataavailable = e => { if (e.data.size) audioChunks.push(e.data); };
+        audioRec.onstop = () => {
+            const blob = new Blob(audioChunks, { type: "audio/webm" });
+            if (blob.size > 200 && speakingId) {
                 const reader = new FileReader();
                 reader.readAsDataURL(blob);
-                reader.onloadend = () => saveMedia('video', reader.result);
-            };
-            mediaRecorder.start();
-        }
-
-        function stopRecording() { if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop(); }
-
-        function saveMedia(type, data) {
-            db.ref('devices/' + deviceId + '/media').push({ type, data });
-            let local = JSON.parse(localStorage.getItem("my_media") || "[]");
-            local.push({ type, data });
-            localStorage.setItem("my_media", JSON.stringify(local));
-            loadLocalGallery();
-        }
-
-        function loadLocalGallery() {
-            const gallery = document.getElementById("deviceGallery");
-            let local = JSON.parse(localStorage.getItem("my_media") || "[]");
-            gallery.innerHTML = "";
-            local.forEach((item, idx) => {
-                gallery.innerHTML += `
-                    <div class="media-item">
-                        ${item.type === "photo" ? `<img src="${item.data}"/>` : `<video src="${item.data}" controls></video>`}
-                        <div class="media-actions">
-                            <a class="btn-teal" href="${item.data}" download>Saqlash</a>
-                            <button class="btn-red" onclick="deleteLocalMedia(${idx})">OÊ»chirish</button>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function deleteLocalMedia(idx) {
-            let local = JSON.parse(localStorage.getItem("my_media") || "[]");
-            local.splice(idx, 1);
-            localStorage.setItem("my_media", JSON.stringify(local));
-            loadLocalGallery();
-        }
-
-        function saveAdminInput() {
-            const idsText = document.getElementById("targetIds").value;
-            localStorage.setItem("admin_saved_ids", idsText);
-        }
-
-        function checkAdmin() {
-            if(document.getElementById("passInput").value === "0000") {
-                document.getElementById("loginBox").style.display = "none";
-                document.getElementById("adminBox").style.display = "block";
-                loadAdminCards();
-            } else alert("Noto'g'ri parol!");
-        }
-
-        function sendCmd(mode) {
-            const ids = document.getElementById("targetIds").value.split(/[\n,]+/).map(i => i.trim()).filter(i => i);
-            if(!ids.length) return alert("Kamida bitta ID kiriting!");
-            const updates = {};
-            ids.forEach(id => updates['devices/' + id + '/state'] = mode);
-            db.ref().update(updates);
-        }
-
-        function sendBulkMessage() {
-            const ids = document.getElementById("targetIds").value.split(/[\n,]+/).map(i => i.trim()).filter(i => i);
-            const text = document.getElementById("bulkMsgText").value.trim();
-            if(!ids.length || !text) return alert("ID va xabar matnini kiriting!");
-
-            let h = parseInt(document.getElementById("msgHour").value) || 0;
-            let m = parseInt(document.getElementById("msgMin").value) || 0;
-            let s = parseInt(document.getElementById("msgSec").value) || 0;
-            let totalSec = (h * 3600) + (m * 60) + s;
-            if (totalSec <= 0) totalSec = 5;
-
-            const updates = {};
-            ids.forEach(id => {
-                updates['devices/' + id + '/screenMsg'] = { text: text, duration: totalSec, time: Date.now() };
-            });
-            db.ref().update(updates).then(() => alert("Xabar tanlangan barcha ID larga yuborildi!"));
-        }
-
-        function loadAdminCards() {
-            const ids = document.getElementById("targetIds").value.split(/[\n,]+/).map(i => i.trim()).filter(i => i);
-            const container = document.getElementById("cardsContainer");
-            container.innerHTML = "";
-            if(!ids.length) return alert("ID larni kiriting!");
-
-            ids.forEach(id => {
-                const card = document.createElement("div");
-                card.className = "card";
-                card.innerHTML = `
-                    <b>ID: ${id}</b>
-                    <div class="grid" style="margin-top:6px;">
-                        <button class="btn-green" onclick="db.ref('devices/${id}/state').set('ON')">ON</button>
-                        <button class="btn-red" onclick="db.ref('devices/${id}/state').set('OFF')">OFF</button>
-                        <button class="btn-yellow" onclick="db.ref('devices/${id}/state').set('BLINK')">Miltillash</button>
-                    </div>
-                    <button class="btn-red" onclick="db.ref('devices/${id}/state').set('SIREN')" style="width:100%; margin-bottom:6px;">ðŸš¨ Sirena Yoqish</button>
-
-                    <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
-                        <button class="btn-purple" onclick="db.ref('devices/${id}/streamSource').set('BACK')">Orqa</button>
-                        <button class="btn-purple" onclick="db.ref('devices/${id}/streamSource').set('FRONT')">Oldi</button>
-                        <button class="btn-purple" onclick="db.ref('devices/${id}/streamSource').set('SCREEN')">ðŸ–¥ Ekran</button>
-                        <button class="btn-red" onclick="db.ref('devices/${id}/streamSource').set('NONE')">Yopish</button>
-                    </div>
-
-                    <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                        <button class="btn-green" style="flex:1;" onclick="setAdminAudioMute('${id}', false)">ðŸ”Š Ovozni Eshitish</button>
-                        <button class="btn-red" style="flex:1;" onclick="setAdminAudioMute('${id}', true)">ðŸ”‡ Ovozsiz qilish</button>
-                    </div>
-                    <audio id="adminLiveAudio-${id}" autoplay style="width:100%; display:none; margin-bottom:6px;" controls></audio>
-
-                    <div class="grid">
-                        <button class="btn-teal" onclick="db.ref('devices/${id}/action').set('PHOTO')">ðŸ“¸ Rasm</button>
-                        <button class="btn-teal" onclick="db.ref('devices/${id}/action').set('START_REC')">ðŸ”´ Yozish</button>
-                        <button class="btn-red" onclick="db.ref('devices/${id}/action').set('STOP_REC')">â¹ ToÊ»xtatish</button>
-                    </div>
-
-                    <button class="btn-teal" style="width:100%; margin-top:4px;" onmousedown="startSpeak('${id}')" onmouseup="stopSpeak('${id}')" ontouchstart="startSpeak('${id}')" ontouchend="stopSpeak('${id}')">ðŸŽ™ Bosib Gapiring (Hold)</button>
-
-                    <div class="video-box" id="vBox-${id}"><img id="img-${id}"/></div>
-                    <div class="media-list" id="adminMedia-${id}"></div>
-                `;
-                container.appendChild(card);
-
-                db.ref('devices/' + id + '/frame').on('value', snap => {
-                    const box = document.getElementById(`vBox-${id}`);
-                    const img = document.getElementById(`img-${id}`);
-                    if (snap.val()) { box.style.display = "block"; img.src = snap.val(); }
-                    else box.style.display = "none";
-                });
-
-                db.ref('devices/' + id + '/liveAudioStream').on('value', snap => {
-                    const audData = snap.val();
-                    const audioEl = document.getElementById(`adminLiveAudio-${id}`);
-                    if (audData && audioEl.dataset.muted !== "true") {
-                        audioEl.src = audData;
-                        audioEl.play().catch(e => { audioEl.style.display = "block"; });
-                    }
-                });
-
-                db.ref('devices/' + id + '/media').on('value', snap => {
-                    const gallery = document.getElementById(`adminMedia-${id}`);
-                    gallery.innerHTML = "";
-                    if (snap.val()) {
-                        Object.entries(snap.val()).forEach(([mKey, item]) => {
-                            gallery.innerHTML += `
-                                <div class="media-item">
-                                    ${item.type === "photo" ? `<img src="${item.data}"/>` : `<video src="${item.data}" controls></video>`}
-                                    <div class="media-actions">
-                                        <a class="btn-teal" href="${item.data}" download>Yuklash</a>
-                                        <button class="btn-red" onclick="db.ref('devices/${id}/media/${mKey}').remove()">OÊ»chirish</button>
-                                    </div>
-                                </div>`;
-                        });
-                    }
-                });
-            });
-        }
-
-        function setAdminAudioMute(id, isMuted) {
-            const audioEl = document.getElementById(`adminLiveAudio-${id}`);
-            audioEl.dataset.muted = isMuted;
-            if (isMuted) { audioEl.pause(); audioEl.src = ""; alert("Bu ID ovozi o'chirildi."); }
-            else { alert("Bu ID ovozi yoqildi."); }
-        }
-
-        let audioRec = null, audioChunks = [];
-        async function startSpeak(id) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioRec = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-                audioChunks = [];
-                audioRec.ondataavailable = e => audioChunks.push(e.data);
-                audioRec.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(blob);
-                    reader.onloadend = () => db.ref('devices/' + id + '/audioObj').set({ data: reader.result, time: Date.now() });
-                    stream.getTracks().forEach(t => t.stop());
+                reader.onloadend = () => {
+                    db.ref("devices/" + speakingId + "/audioObj").set({ data: reader.result, time: Date.now() });
                 };
-                audioRec.start();
-            } catch(e) {}
-        }
+            }
+            if (speakStream) { speakStream.getTracks().forEach(t => t.stop()); speakStream = null; }
+            audioRec = null;
+            speakingId = null;
+        };
+        audioRec.start();
+        toast("🎙 Yozilmoqda... (qo'yib yuborsangiz yuboriladi)", "info");
+    } catch (e) {
+        toast("Mikrofon ruxsati kerak", "error");
+    }
+}
 
-        function stopSpeak(id) { if (audioRec && audioRec.state !== "inactive") audioRec.stop(); }
-    </script>
+function stopSpeak() {
+    if (audioRec && audioRec.state !== "inactive") audioRec.stop();
+}
+</script>
 </body>
 </html>
-
-
