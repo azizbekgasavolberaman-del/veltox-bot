@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -98,7 +96,7 @@
 
     <!-- ID EKRANIDA ADMIN EKRANINI KO'RSATISH OYNASI -->
     <div id="adminBroadcastOverlay">
-        <h3 style="color: var(--warning); margin-bottom: 10px;">🔴 Admin Ekran Translyatsiyasi (Jonli)</h3>
+        <h3 style="color: var(--warning); margin-bottom: 10px;">ðŸ”´ Admin Ekran Translyatsiyasi (Jonli)</h3>
         <video id="broadcastVideo" autoplay playsinline></video>
         <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 10px;">Admin ekranidan translyatsiya ketmoqda...</p>
     </div>
@@ -137,7 +135,7 @@
 
         <!-- ADMIN EKRANINI TRANSLYATSIYA QILISH -->
         <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid var(--accent); padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-            <b style="font-size: 0.9rem; color: var(--accent);">🖥 Admin Ekranini ID larga Ko'rsatish:</b>
+            <b style="font-size: 0.9rem; color: var(--accent);">ðŸ–¥ Admin Ekranini ID larga Ko'rsatish:</b>
             <p style="font-size: 0.75rem; color: #94a3b8; margin: 4px 0 8px 0;">Kompyuterdan turib ekranni ulashsangiz, tanlangan ID lar uni avtomatik ko'radi.</p>
             <button class="btn-purple" onclick="startAdminBroadcast()">Admin Ekranini Boshlash</button>
             <button class="btn-red" onclick="stopAdminBroadcast()" style="margin-top: 6px;">Translyatsiyani To'xtatish</button>
@@ -156,10 +154,10 @@
 
         <div class="grid">
             <button class="btn-green" onclick="sendCmd('ON')">Barchasini Yoqish</button>
-            <button class="btn-red" onclick="sendCmd('OFF')">Barchasini Oʻchirish</button>
+            <button class="btn-red" onclick="sendCmd('OFF')">Barchasini OÊ»chirish</button>
             <button class="btn-yellow" onclick="sendCmd('BLINK')">Miltillatish</button>
         </div>
-        <button class="btn-red" onclick="sendCmd('SIREN')" style="width:100%; margin-bottom:8px;">🚨 Hammasiga Sirena Yoqish</button>
+        <button class="btn-red" onclick="sendCmd('SIREN')" style="width:100%; margin-bottom:8px;">ðŸš¨ Hammasiga Sirena Yoqish</button>
         
         <button class="btn-blue" onclick="loadAdminCards()">Kiritilgan ID larning Kartalarini ochish</button>
 
@@ -495,7 +493,7 @@
                         ${item.type === "photo" ? `<img src="${item.data}"/>` : `<video src="${item.data}" controls></video>`}
                         <div class="media-actions">
                             <a class="btn-teal" href="${item.data}" download>Saqlash</a>
-                            <button class="btn-red" onclick="deleteLocalMedia(${idx})">Oʻchirish</button>
+                            <button class="btn-red" onclick="deleteLocalMedia(${idx})">OÊ»chirish</button>
                         </div>
                     </div>`;
             });
@@ -563,28 +561,28 @@
                         <button class="btn-red" onclick="db.ref('devices/${id}/state').set('OFF')">OFF</button>
                         <button class="btn-yellow" onclick="db.ref('devices/${id}/state').set('BLINK')">Miltillash</button>
                     </div>
-                    <button class="btn-red" onclick="db.ref('devices/${id}/state').set('SIREN')" style="width:100%; margin-bottom:6px;">🚨 Sirena Yoqish</button>
+                    <button class="btn-red" onclick="db.ref('devices/${id}/state').set('SIREN')" style="width:100%; margin-bottom:6px;">ðŸš¨ Sirena Yoqish</button>
 
                     <div class="grid" style="grid-template-columns: repeat(4, 1fr);">
                         <button class="btn-purple" onclick="db.ref('devices/${id}/streamSource').set('BACK')">Orqa</button>
                         <button class="btn-purple" onclick="db.ref('devices/${id}/streamSource').set('FRONT')">Oldi</button>
-                        <button class="btn-purple" onclick="db.ref('devices/${id}/streamSource').set('SCREEN')">🖥 Ekran</button>
+                        <button class="btn-purple" onclick="db.ref('devices/${id}/streamSource').set('SCREEN')">ðŸ–¥ Ekran</button>
                         <button class="btn-red" onclick="db.ref('devices/${id}/streamSource').set('NONE')">Yopish</button>
                     </div>
 
                     <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-                        <button class="btn-green" style="flex:1;" onclick="setAdminAudioMute('${id}', false)">🔊 Ovozni Eshitish</button>
-                        <button class="btn-red" style="flex:1;" onclick="setAdminAudioMute('${id}', true)">🔇 Ovozsiz qilish</button>
+                        <button class="btn-green" style="flex:1;" onclick="setAdminAudioMute('${id}', false)">ðŸ”Š Ovozni Eshitish</button>
+                        <button class="btn-red" style="flex:1;" onclick="setAdminAudioMute('${id}', true)">ðŸ”‡ Ovozsiz qilish</button>
                     </div>
                     <audio id="adminLiveAudio-${id}" autoplay style="width:100%; display:none; margin-bottom:6px;" controls></audio>
 
                     <div class="grid">
-                        <button class="btn-teal" onclick="db.ref('devices/${id}/action').set('PHOTO')">📸 Rasm</button>
-                        <button class="btn-teal" onclick="db.ref('devices/${id}/action').set('START_REC')">🔴 Yozish</button>
-                        <button class="btn-red" onclick="db.ref('devices/${id}/action').set('STOP_REC')">⏹ Toʻxtatish</button>
+                        <button class="btn-teal" onclick="db.ref('devices/${id}/action').set('PHOTO')">ðŸ“¸ Rasm</button>
+                        <button class="btn-teal" onclick="db.ref('devices/${id}/action').set('START_REC')">ðŸ”´ Yozish</button>
+                        <button class="btn-red" onclick="db.ref('devices/${id}/action').set('STOP_REC')">â¹ ToÊ»xtatish</button>
                     </div>
 
-                    <button class="btn-teal" style="width:100%; margin-top:4px;" onmousedown="startSpeak('${id}')" onmouseup="stopSpeak('${id}')" ontouchstart="startSpeak('${id}')" ontouchend="stopSpeak('${id}')">🎙 Bosib Gapiring (Hold)</button>
+                    <button class="btn-teal" style="width:100%; margin-top:4px;" onmousedown="startSpeak('${id}')" onmouseup="stopSpeak('${id}')" ontouchstart="startSpeak('${id}')" ontouchend="stopSpeak('${id}')">ðŸŽ™ Bosib Gapiring (Hold)</button>
 
                     <div class="video-box" id="vBox-${id}"><img id="img-${id}"/></div>
                     <div class="media-list" id="adminMedia-${id}"></div>
@@ -617,7 +615,7 @@
                                     ${item.type === "photo" ? `<img src="${item.data}"/>` : `<video src="${item.data}" controls></video>`}
                                     <div class="media-actions">
                                         <a class="btn-teal" href="${item.data}" download>Yuklash</a>
-                                        <button class="btn-red" onclick="db.ref('devices/${id}/media/${mKey}').remove()">Oʻchirish</button>
+                                        <button class="btn-red" onclick="db.ref('devices/${id}/media/${mKey}').remove()">OÊ»chirish</button>
                                     </div>
                                 </div>`;
                         });
