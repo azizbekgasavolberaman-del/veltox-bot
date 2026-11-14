@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#0f172a">
 <title>Qurilmalarni Boshqarish Tizimi</title>
 <style>
+    /* ============================================================
+       CSS O'ZGARUVCHILARI (THEME)
+       ============================================================ */
     :root {
         --bg: #0b1220;
         --card: rgba(30, 41, 59, 0.72);
@@ -18,15 +21,20 @@
         --warning: #f59e0b;
         --purple: #8b5cf6;
         --teal: #14b8a6;
+        
+        /* Sayt foni va matni uchun dinamik o'zgaruvchilar */
+        --site-bg: #0b1220;
+        --site-text: #f1f5f9;
+        --site-card: rgba(30, 41, 59, 0.72);
+        --site-accent: #3b82f6;
     }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
         font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        background:
-            radial-gradient(900px 500px at 10% -10%, rgba(59,130,246,0.18), transparent 60%),
-            radial-gradient(800px 500px at 110% 10%, rgba(139,92,246,0.16), transparent 60%),
-            var(--bg);
-        color: var(--text);
+        /* Fon rangi endi o'zgaruvchi orqali boshqariladi */
+        background: var(--site-bg);
+        color: var(--site-text);
         padding: 16px;
         min-height: 100vh;
         display: flex;
@@ -34,7 +42,7 @@
         align-items: center;
         gap: 14px;
         overflow-x: hidden;
-        transition: padding-top .3s ease;
+        transition: padding-top .3s ease, background .4s ease, color .4s ease;
     }
 
     /* ===== YUQORI E'LON PANELI ===== */
@@ -100,7 +108,7 @@
     .box {
         max-width: 760px;
         width: 100%;
-        background: var(--card);
+        background: var(--site-card);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         padding: 18px;
@@ -108,6 +116,7 @@
         border: 1px solid var(--line);
         box-shadow: 0 12px 34px rgba(0,0,0,0.35);
         animation: rise .35s ease both;
+        transition: background .3s ease, border-color .3s ease;
     }
     @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
@@ -116,7 +125,7 @@
         margin-bottom: 12px;
         padding-bottom: 8px;
         border-bottom: 1px solid var(--line);
-        background: linear-gradient(90deg, #60a5fa, #a78bfa);
+        background: linear-gradient(90deg, var(--site-accent), #a78bfa);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -171,7 +180,7 @@
     .btn-yellow { background: linear-gradient(145deg, #f59e0b, #d97706); }
     .btn-purple { background: linear-gradient(145deg, #8b5cf6, #7c3aed); }
     .btn-teal   { background: linear-gradient(145deg, #14b8a6, #0d9488); }
-    .btn-blue   { background: linear-gradient(145deg, #3b82f6, #2563eb); width: 100%; }
+    .btn-blue   { background: linear-gradient(145deg, var(--site-accent), #2563eb); width: 100%; }
 
     textarea, input, select {
         width: 100%;
@@ -187,7 +196,7 @@
     }
     textarea:focus, input:focus, select:focus {
         outline: none;
-        border-color: var(--accent);
+        border-color: var(--site-accent);
         box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
     }
     textarea { height: 62px; resize: vertical; }
@@ -340,8 +349,8 @@
     }
     .toast {
         background: rgba(30,41,59,.97);
-        border: 1px solid var(--accent);
-        border-left: 4px solid var(--accent);
+        border: 1px solid var(--site-accent);
+        border-left: 4px solid var(--site-accent);
         color: #e2e8f0;
         padding: 12px 16px;
         border-radius: 10px;
@@ -484,7 +493,7 @@
 </head>
 <body>
 
-<!-- ============ YUQORI E'LON PANELI (yopish tugmasi YO'Q) ============ -->
+<!-- ============ YUQORI E'LON PANELI ============ -->
 <div id="announcementBar" class="announcement-bar" data-size="normal">
     <div class="ann-track">
         <div class="ann-mover" id="annMover">
@@ -542,8 +551,35 @@
 <div class="box" id="adminBox" style="display:none;">
     <h2>🎛 Markaziy Boshqaruv Paneli</h2>
 
-    <textarea id="targetIds" placeholder="ID larni vergul yoki yangi qator bilan kiriting&#10;Masalan: DEV-1234, DEV-5678"
-              oninput="saveAdminInput()"></textarea>
+    <!-- ===== SAYT ORQA FONI (CHOY) RANGINI O'ZGARTIRISH ===== -->
+    <div class="panel" style="border-color: rgba(139,92,246,.45); background: rgba(139,92,246,.08);">
+        <div class="section-title" style="color:#c4b5fd;">🎨 Sayt Orqa Foni (Choy) Rangini O'zgartirish</div>
+        <p style="font-size:.74rem; color:var(--muted); margin-bottom:9px; line-height:1.5;">
+            Bu yerda tanlangan rang saytning asosiy orqa foniga (choyga) ta'sir qiladi.
+            <br><b style="color:#c4b5fd;">iTask kabi tayyor mavzular:</b>
+        </p>
+        
+        <!-- Tayyor mavzular (iTask uslubida) -->
+        <div class="palette" id="siteThemePalette" style="margin-bottom:12px;">
+            <button type="button" class="swatch" data-bg="#0b1220" data-text="#f1f5f9" style="background:#0b1220; border-color:#475569;" title="Tungi (Default)"></button>
+            <button type="button" class="swatch" data-bg="#f8fafc" data-text="#0f172a" style="background:#f8fafc; border-color:#cbd5e1;" title="Yorug'"></button>
+            <button type="button" class="swatch" data-bg="#1e3a8a" data-text="#e0e7ff" style="background:#1e3a8a;" title="Ko'k"></button>
+            <button type="button" class="swatch" data-bg="#064e3b" data-text="#d1fae5" style="background:#064e3b;" title="Yashil"></button>
+            <button type="button" class="swatch" data-bg="#4c1d95" data-text="#ede9fe" style="background:#4c1d95;" title="Binafsha"></button>
+            <button type="button" class="swatch" data-bg="#7f1d1d" data-text="#fee2e2" style="background:#7f1d1d;" title="Qizil"></button>
+        </div>
+
+        <label style="font-size:.76rem; color:var(--muted); display:block; margin-bottom:5px;">Yoki o'zingiz tanlang:</label>
+        <div class="color-row">
+            <input type="color" id="siteBgPicker" value="#0b1220">
+            <input type="text" id="siteBgHex" value="#0b1220" placeholder="#0b1220">
+        </div>
+
+        <div style="display:flex; gap:6px; margin-top:10px;">
+            <button class="btn-purple" style="flex:1;" onclick="applySiteBg()">🎨 Fonni Qo'llash</button>
+            <button class="btn-red"   style="flex:1;" onclick="resetSiteBg()">🔄 Tiklash</button>
+        </div>
+    </div>
 
     <!-- ===== YUQORI E'LON PANELI ===== -->
     <div class="panel" style="border-color: rgba(220,38,38,.4); background: rgba(220,38,38,.06);">
@@ -573,25 +609,21 @@
             </select>
         </div>
 
-        <!-- ===== RANG TANLASH ===== -->
         <label style="font-size:.76rem; color:var(--muted); display:block; margin-bottom:5px;">
-            🎨 Fon rangi — palitradan yoki kod bilan:
+            🎨 E'lon Fon Rangi:
         </label>
         <div class="color-row">
-            <input type="color" id="annColorPicker" value="#dc2626" title="Palitradan tanlash">
-            <input type="text" id="annColorHex" value="#dc2626" placeholder="#dc2626, dc2626 yoki 'red'">
+            <input type="color" id="annColorPicker" value="#dc2626">
+            <input type="text" id="annColorHex" value="#dc2626" placeholder="#dc2626">
         </div>
         <div class="palette" id="annPalette">
-            <button type="button" class="swatch active" data-color="#dc2626" style="background:#dc2626" title="Qizil (#dc2626)"></button>
-            <button type="button" class="swatch" data-color="#f59e0b" style="background:#f59e0b" title="Sariq (#f59e0b)"></button>
-            <button type="button" class="swatch" data-color="#22c55e" style="background:#22c55e" title="Yashil (#22c55e)"></button>
-            <button type="button" class="swatch" data-color="#3b82f6" style="background:#3b82f6" title="Ko'k (#3b82f6)"></button>
-            <button type="button" class="swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Binafsha (#8b5cf6)"></button>
-            <button type="button" class="swatch" data-color="#ec4899" style="background:#ec4899" title="Pushti (#ec4899)"></button>
-            <button type="button" class="swatch" data-color="#14b8a6" style="background:#14b8a6" title="Feruza (#14b8a6)"></button>
-            <button type="button" class="swatch" data-color="#0f172a" style="background:#0f172a; border-color:#475569;" title="To'q ko'k (#0f172a)"></button>
-            <button type="button" class="swatch" data-color="#000000" style="background:#000000; border-color:#475569;" title="Qora (#000000)"></button>
-            <button type="button" class="swatch" data-color="#ffffff" style="background:#ffffff; border-color:#475569;" title="Oq (#ffffff)"></button>
+            <button type="button" class="swatch active" data-color="#dc2626" style="background:#dc2626"></button>
+            <button type="button" class="swatch" data-color="#f59e0b" style="background:#f59e0b"></button>
+            <button type="button" class="swatch" data-color="#22c55e" style="background:#22c55e"></button>
+            <button type="button" class="swatch" data-color="#3b82f6" style="background:#3b82f6"></button>
+            <button type="button" class="swatch" data-color="#8b5cf6" style="background:#8b5cf6"></button>
+            <button type="button" class="swatch" data-color="#000000" style="background:#000000; border-color:#475569;"></button>
+            <button type="button" class="swatch" data-color="#ffffff" style="background:#ffffff; border-color:#475569;"></button>
         </div>
 
         <div class="ann-preview" id="annPreview">
@@ -609,9 +641,9 @@
         <div class="section-title" style="color:#93c5fd;">🖥 Admin Ekranini Ulashish</div>
         <label style="font-size:.76rem; color:var(--muted); display:block; margin-bottom:5px;">Sifat darajasi:</label>
         <select id="bcQuality">
-            <option value="low">Past (sekin internet uchun)</option>
-            <option value="mid" selected>O'rta (tavsiya etiladi)</option>
-            <option value="high">Yuqori (aniq, tez internet)</option>
+            <option value="low">Past</option>
+            <option value="mid" selected>O'rta</option>
+            <option value="high">Yuqori</option>
         </select>
         <div class="grid" style="grid-template-columns:1fr 1fr;">
             <button class="btn-purple" id="bcStartBtn" onclick="startAdminBroadcast()">▶ Boshlash</button>
@@ -731,10 +763,9 @@ function toast(msg, type = "info") {
 function normalizeColor(val) {
     val = (val || "").trim();
     if (!val) return "#dc2626";
-    // 6 yoki 3 xonali hex, # siz
     if (/^[0-9a-fA-F]{6}$/.test(val)) return "#" + val;
     if (/^[0-9a-fA-F]{3}$/.test(val)) return "#" + val;
-    return val; // named color, rgb(), hsl() va h.k.
+    return val;
 }
 
 function isLightColor(color) {
@@ -781,6 +812,31 @@ function unlockAudio() {
     LISTENERLAR
    ============================================================ */
 function setupListeners() {
+    // --- SAYT ORQA FONI (CHOY) LISTENERI ---
+    db.ref("siteSettings/bgTheme").on("value", snap => {
+        const data = snap.val();
+        if (!data) return;
+        
+        const root = document.documentElement;
+        
+        if (data.bg) {
+            root.style.setProperty('--site-bg', data.bg);
+            // Meta theme-color ni ham yangilash
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', data.bg);
+        }
+        if (data.text) {
+            root.style.setProperty('--site-text', data.text);
+            root.style.setProperty('--text', data.text); // Eski o'zgaruvchi uchun ham
+        }
+        
+        // Admin paneldagi rang tanlagichni yangilash
+        const bgPicker = document.getElementById("siteBgPicker");
+        const bgHex = document.getElementById("siteBgHex");
+        if (bgPicker && data.bg) bgPicker.value = data.bg;
+        if (bgHex && data.bg) bgHex.value = data.bg;
+    });
+
+    // --- QURILMA STATE ---
     db.ref("devices/" + deviceId + "/state").on("value", snap => {
         executeInstantState(snap.val() || "OFF");
     });
@@ -793,6 +849,7 @@ function setupListeners() {
         handleAction(snap.val());
     });
 
+    // --- ADMIN EKRAN FRAME ---
     db.ref("devices/" + deviceId + "/adminScreenFrame").on("value", snap => {
         const frame = snap.val();
         const overlay = document.getElementById("adminBroadcastOverlay");
@@ -815,6 +872,7 @@ function setupListeners() {
         }
     });
 
+    // --- AUDIO OBJ ---
     db.ref("devices/" + deviceId + "/audioObj").on("value", snap => {
         const obj = snap.val();
         if (!obj || !obj.data || !obj.time) return;
@@ -828,6 +886,7 @@ function setupListeners() {
         }
     });
 
+    // --- SCREEN MESSAGE ---
     db.ref("devices/" + deviceId + "/screenMsg").on("value", snap => {
         const msgObj = snap.val();
         if (!msgObj || !msgObj.text || !msgObj.time) return;
@@ -837,7 +896,7 @@ function setupListeners() {
         }
     });
 
-    /* ===== YUQORI E'LON LISTENERI ===== */
+    // --- YUQORI E'LON LISTENERI ---
     db.ref("globalAnnouncement").on("value", snap => {
         const data = snap.val();
         const bar = document.getElementById("announcementBar");
@@ -997,7 +1056,6 @@ function updateAnnPreview() {
     preview.style.background = c;
     preview.style.color = isLightColor(c) ? "#0b1220" : "#ffffff";
 
-    // Qatorlardan birinchi bo'sh bo'lmagan matnni preview da ko'rsatish
     const firstMsg = Array.from(document.querySelectorAll(".ann-input"))
         .map(i => i.value.trim())
         .find(v => v.length > 0);
@@ -1011,7 +1069,6 @@ function loadAnnDraft() {
     const draft = JSON.parse(localStorage.getItem("ann_draft") || "[]");
     document.getElementById("annRows").innerHTML = "";
 
-    // Sozlamalarni tiklash
     const s = localStorage.getItem("ann_speed");
     const z = localStorage.getItem("ann_size");
     const c = localStorage.getItem("ann_color");
@@ -1079,6 +1136,64 @@ function publishAnnouncement() {
 function stopAnnouncement() {
     db.ref("globalAnnouncement/enabled").set(false);
     toast("E'lon to'xtatildi", "info");
+}
+
+/* ============================================================
+    SAYT ORQA FONI (CHOY) - ADMIN
+   ============================================================ */
+function initSiteBgControls() {
+    const bgPicker = document.getElementById("siteBgPicker");
+    const bgHex = document.getElementById("siteBgHex");
+
+    if (!bgPicker || !bgHex) return;
+
+    // Tayyor mavzular (iTask uslubida)
+    document.querySelectorAll("#siteThemePalette .swatch").forEach(s => {
+        s.addEventListener("click", () => {
+            const bg = s.dataset.bg;
+            const text = s.dataset.text;
+            
+            if (bgHex) bgHex.value = bg;
+            if (bgPicker) bgPicker.value = bg;
+            
+            // Darhol qo'llash
+            applySiteBg(bg, text);
+        });
+    });
+
+    // Picker va Hex sinxronizatsiyasi
+    bgPicker.addEventListener("input", () => { bgHex.value = bgPicker.value; });
+    bgHex.addEventListener("input", () => {
+        if (/^#[0-9a-fA-F]{6}$/.test(bgHex.value)) bgPicker.value = bgHex.value;
+    });
+}
+
+function applySiteBg(bgColor, textColor) {
+    const bg = bgColor || normalizeColor(document.getElementById("siteBgHex").value);
+    const text = textColor || (isLightColor(bg) ? "#0f172a" : "#f1f5f9");
+    
+    if (!/^#[0-9a-fA-F]{6}$/.test(bg)) {
+        toast("Iltimos, to'g'ri HEX kod kiriting (masalan: #0b1220)", "error");
+        return;
+    }
+
+    db.ref("siteSettings/bgTheme").set({
+        bg: bg,
+        text: text,
+        time: Date.now()
+    }).then(() => {
+        toast("🎨 Sayt foni o'zgartirildi!", "success");
+    }).catch(() => toast("Xatolik yuz berdi", "error"));
+}
+
+function resetSiteBg() {
+    db.ref("siteSettings/bgTheme").set({
+        bg: "#0b1220",
+        text: "#f1f5f9",
+        time: Date.now()
+    }).then(() => {
+        toast("🔄 Standart fon tiklandi", "success");
+    });
 }
 
 /* ============================================================
@@ -1515,6 +1630,7 @@ function checkAdmin() {
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("adminBox").style.display = "block";
         loadAnnDraft();
+        initSiteBgControls(); // Yangi fon boshqaruvini ishga tushirish
         loadAdminCards();
         toast("Admin panelga xush kelibsiz", "success");
     } else {
