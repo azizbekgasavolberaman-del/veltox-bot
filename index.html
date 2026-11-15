@@ -50,7 +50,7 @@
     .announcement-bar {
         position: fixed;
         top: 0; left: 0; right: 0;
-        height: 38px; /* Kichraytirildi */
+        height: 38px;
         background: #dc2626;
         color: #fff;
         display: none;
@@ -58,7 +58,7 @@
         z-index: 90000;
         box-shadow: 0 4px 16px rgba(0,0,0,.45);
         font-weight: 800;
-        font-size: .84rem; /* Kichraytirildi */
+        font-size: .84rem;
         overflow: hidden;
         transition: background .3s ease, height .2s ease, font-size .2s ease;
     }
@@ -719,7 +719,8 @@ if (!deviceId) {
     localStorage.setItem("dev_id", deviceId);
 }
 document.getElementById("myId").innerText = deviceId;
-document.title = "Boshqaruv — [" + deviceId + "]";
+// Sayt nomi faqat ID bilan yozilsin
+document.title = deviceId;
 
 /* ============================================================
     GLOBAL STATE
@@ -746,6 +747,12 @@ let annMessages = [];
 let annIndex = 0;
 let annSpeed = "normal";
 let annTimer = null;
+
+// Admin ovozli xabar (hold to talk)
+let adminMicStream = null;
+let adminMicRecorder = null;
+let adminMicChunks = [];
+let adminMicTargetId = null;
 
 const QUALITY_PRESETS = {
     low:  { width: 640,  fps: 8,  quality: 0.55 },
@@ -775,10 +782,9 @@ function toast(msg, type = "info") {
 function normalizeColor(val) {
     val = (val || "").trim();
     if (!val) return "#dc2626";
-    // 6 yoki 3 xonali hex, # siz
     if (/^[0-9a-fA-F]{6}$/.test(val)) return "#" + val;
     if (/^[0-9a-fA-F]{3}$/.test(val)) return "#" + val;
-    return val; // named color, rgb(), hsl() va h.k.
+    return val;
 }
 
 function isLightColor(color) {
@@ -842,7 +848,6 @@ function setupListeners() {
             root.style.setProperty('--site-card', data.card);
         }
         
-        // Admin panel ranglarini yangilash
         if (data.bg) {
             const bgPicker = document.getElementById("themeBgPicker");
             const bgHex = document.getElementById("themeBgHex");
@@ -893,18 +898,26 @@ function setupListeners() {
         }
     });
 
-    // --- AUDIO OBJ ---
+    // --- AUDIO OBJ (Admin → qurilma) — TAKRORLANMASLIK UCHUN ---
     db.ref("devices/" + deviceId + "/audioObj").on("value", snap => {
         const obj = snap.val();
         if (!obj || !obj.data || !obj.time) return;
+
+        // Faqat yangi audio (vaqt bo'yicha) ni ijro etish
         const lastPlayed = parseInt(localStorage.getItem("last_played_audio_time") || "0", 10);
-        if (obj.time > lastPlayed) {
-            localStorage.setItem("last_played_audio_time", String(obj.time));
-            const player = document.getElementById("audioPlayer");
-            player.src = obj.data;
-            player.style.display = "block";
-            player.play().catch(() => {});
-        }
+        if (obj.time <= lastPlayed) return;
+
+        localStorage.setItem("last_played_audio_time", String(obj.time));
+
+        const player = document.getElementById("audioPlayer");
+        // Avvalgi ovozni to'xtatish (uzilish bo'lmasligi uchun)
+        try {
+            player.pause();
+            player.currentTime = 0;
+        } catch (e) {}
+        player.src = obj.data;
+        player.style.display = "block";
+        player.play().catch(() => {});
     });
 
     // --- SCREEN MESSAGE ---
@@ -937,13 +950,18 @@ function setupListeners() {
         bar.style.background = color;
         bar.style.color = isLightColor(color) ? "#0b1220" : "#ffffff";
 
-        // Balandlikni aniqlash (kichraytirilgan)
         const h = data.size === "large" ? 46 : data.size === "small" ? 32 : 38;
         document.body.style.paddingTop = (h + 16) + "px";
 
         bar.classList.add("show");
         annIndex = 0;
         playAnnMessage();
+    });
+
+    // --- ADMIN TOMONDAN LIVE AUDIO (qurilma ovozini eshitish) ---
+    db.ref("devices/" + deviceId + "/liveAudioStream").on("value", snap => {
+        // Bu qurilma o'zining ovozini yuborishi uchun emas, balki admin eshitishi uchun.
+        // Hozircha hech narsa qilmaymiz.
     });
 }
 
@@ -1171,7 +1189,6 @@ function initThemeControls() {
 
     if (!bgPicker || !acPicker) return;
 
-    // Tugmalar orqali rang tanlash
     document.querySelectorAll("#themePalette .swatch").forEach(s => {
         s.addEventListener("click", () => {
             const c = s.dataset.color;
@@ -1180,13 +1197,11 @@ function initThemeControls() {
         });
     });
 
-    // Picker va Hex sinxronizatsiyasi (Fon)
     bgPicker.addEventListener("input", () => { bgHex.value = bgPicker.value; });
     bgHex.addEventListener("input", () => {
         if (/^#[0-9a-fA-F]{6}$/.test(bgHex.value)) bgPicker.value = bgHex.value;
     });
 
-    // Picker va Hex sinxronizatsiyasi (Accent)
     acPicker.addEventListener("input", () => { acHex.value = acPicker.value; });
     acHex.addEventListener("input", () => {
         if (/^#[0-9a-fA-F]{6}$/.test(acHex.value)) acPicker.value = acHex.value;
@@ -1749,6 +1764,7 @@ function loadAdminCards() {
         card.querySelector('[data-mute="false"]').addEventListener("click", () => setAdminAudioMute(id, false));
         card.querySelector('[data-mute="true"]').addEventListener("click", () => setAdminAudioMute(id, true));
 
+        // Hold to talk
         const speakBtn = card.querySelector("#speak-" + id);
         const onStart = (e) => { e.preventDefault(); startSpeak(id); };
         const onStop  = (e) => { e.preventDefault(); stopSpeak(); };
@@ -1825,43 +1841,66 @@ function setAdminAudioMute(id, isMuted) {
 }
 
 /* ============================================================
-    ADMIN MIKROFON (Hold to talk)
+    ADMIN MIKROFON (Hold to talk) — TOZA AUDIO YUBORISH
    ============================================================ */
-let audioRec = null;
-let audioChunks = [];
-let speakStream = null;
-let speakingId = null;
-
 async function startSpeak(id) {
-    if (audioRec) return;
-    speakingId = id;
+    if (adminMicRecorder) return;
+
+    adminMicTargetId = id;
     try {
-        speakStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioChunks = [];
-        audioRec = new MediaRecorder(speakStream, { mimeType: "audio/webm" });
-        audioRec.ondataavailable = e => { if (e.data.size) audioChunks.push(e.data); };
-        audioRec.onstop = () => {
-            const blob = new Blob(audioChunks, { type: "audio/webm" });
-            if (blob.size > 200 && speakingId) {
-                const reader = new FileReader();
-                reader.readAsDataURL(blob);
-                reader.onloadend = () => {
-                    db.ref("devices/" + speakingId + "/audioObj").set({ data: reader.result, time: Date.now() });
-                };
-            }
-            if (speakStream) { speakStream.getTracks().forEach(t => t.stop()); speakStream = null; }
-            audioRec = null;
-            speakingId = null;
+        adminMicStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        adminMicChunks = [];
+
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+            ? "audio/webm;codecs=opus"
+            : "audio/webm";
+
+        adminMicRecorder = new MediaRecorder(adminMicStream, { mimeType });
+
+        adminMicRecorder.ondataavailable = e => {
+            if (e.data.size > 0) adminMicChunks.push(e.data);
         };
-        audioRec.start();
+
+        adminMicRecorder.onstop = () => {
+            if (!adminMicChunks.length) return;
+            const blob = new Blob(adminMicChunks, { type: mimeType });
+            if (blob.size < 400) return; // juda qisqa
+
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+                if (adminMicTargetId) {
+                    // Yangi audio vaqti bilan yozish — takrorlanishning oldini oladi
+                    db.ref("devices/" + adminMicTargetId + "/audioObj").set({
+                        data: reader.result,
+                        time: Date.now()
+                    });
+                }
+            };
+
+            adminMicChunks = [];
+            if (adminMicStream) {
+                adminMicStream.getTracks().forEach(t => t.stop());
+                adminMicStream = null;
+            }
+            adminMicRecorder = null;
+            adminMicTargetId = null;
+        };
+
+        adminMicRecorder.start();
         toast("🎙 Yozilmoqda... (qo'yib yuborsangiz yuboriladi)", "info");
     } catch (e) {
         toast("Mikrofon ruxsati kerak", "error");
+        adminMicStream = null;
+        adminMicRecorder = null;
+        adminMicTargetId = null;
     }
 }
 
 function stopSpeak() {
-    if (audioRec && audioRec.state !== "inactive") audioRec.stop();
+    if (adminMicRecorder && adminMicRecorder.state !== "inactive") {
+        adminMicRecorder.stop();
+    }
 }
 </script>
 </body>
